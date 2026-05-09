@@ -143,8 +143,7 @@ async function saveGuest(e) {
   if (editingId) {
     ({ error } = await client.from('guests').update(payload).eq('id', editingId));
   } else {
-    const { data: { user } } = await client.auth.getUser();
-    ({ error } = await client.from('guests').insert([{ ...payload, added_by: user.id }]));
+    ({ error } = await client.from('guests').insert([payload]));
   }
 
   btn.disabled = false;
