@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Berry & Pepsi's Wedding · Budget</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="app-logo">
+      <div class="monogram">W</div>
+      <h1>Berry & Pepsi's Wedding</h1>
+    </div>
+    <div class="header-right">
+      <span class="user-email" id="user-email"></span>
+      <button class="btn-signout" id="btn-signout">Sign out</button>
+    </div>
+  </header>
+
+  <nav class="app-nav">
+    <a href="app.html"     class="nav-link">Venues</a>
+    <a href="guests.html"  class="nav-link">Guest List</a>
+    <a href="budget.html"  class="nav-link active">Budget</a>
+    <a href="tasks.html"   class="nav-link">Tasks</a>
+  </nav>
+
+  <main class="main">
+    <div class="page-header">
+      <div class="page-title">
+        <h2>Budget</h2>
+        <p>Track spending across every part of the day</p>
+      </div>
+      <button class="btn-accent" id="btn-add">+ Add item</button>
+    </div>
+
+    <!-- Total budget -->
+    <div class="total-budget-bar">
+      <div class="total-budget-label">Total budget</div>
+      <div class="total-budget-value" id="total-display">
+        <span id="total-amount-text">Not set</span>
+        <button class="btn-edit-total" id="btn-edit-total" title="Edit">&#9998;</button>
+      </div>
+      <div class="total-budget-edit hidden" id="total-edit">
+        <span class="currency-prefix">£</span>
+        <input type="number" id="total-input" min="0" placeholder="e.g. 20000">
+        <button class="btn-save-total" id="btn-save-total">Save</button>
+        <button class="btn-cancel-total" id="btn-cancel-total">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="budget-summary">
+      <div class="summary-card">
+        <div class="summary-value" id="s-allocated">£0</div>
+        <div class="summary-label">Allocated</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-value" id="s-estimated">£0</div>
+        <div class="summary-label">Estimated</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-value" id="s-paid">£0</div>
+        <div class="summary-label">Paid so far</div>
+      </div>
+      <div class="summary-card summary-highlight" id="remaining-card">
+        <div class="summary-value" id="s-remaining">£0</div>
+        <div class="summary-label">Remaining</div>
+      </div>
+    </div>
+
+    <!-- Budget progress bar -->
+    <div class="budget-progress-wrap" id="budget-progress-wrap">
+      <div class="budget-progress-track">
+        <div class="budget-progress-fill" id="budget-progress-fill"></div>
+      </div>
+      <div class="budget-progress-label" id="budget-progress-label"></div>
+    </div>
+
+    <!-- Items table -->
+    <div class="table-wrap">
+      <table class="guest-table">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Budgeted</th>
+            <th>Estimated</th>
+            <th>Paid</th>
+            <th>Variance</th>
+            <th>Notes</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="budget-tbody">
+          <tr><td colspan="7" class="table-empty">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Add / Edit Modal -->
+  <div class="modal-overlay hidden" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title">Add Budget Item</h3>
+        <button class="btn-close" id="btn-modal-close">&times;</button>
+      </div>
+      <form id="budget-form">
+        <div class="modal-body">
+
+          <div class="field">
+            <label for="f-category">Category</label>
+            <input type="text" id="f-category" required placeholder="e.g. Photography" list="category-suggestions" autocomplete="off">
+            <datalist id="category-suggestions">
+              <option value="Venue">
+              <option value="Catering & Drinks">
+              <option value="Photography & Video">
+              <option value="Music & Entertainment">
+              <option value="Flowers & Decor">
+              <option value="Wedding Cake">
+              <option value="Dress & Attire">
+              <option value="Hair & Makeup">
+              <option value="Transport">
+              <option value="Stationery & Invites">
+              <option value="Rings">
+              <option value="Honeymoon">
+              <option value="Miscellaneous">
+            </datalist>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="f-budgeted">Budgeted (£)</label>
+              <input type="number" id="f-budgeted" min="0" placeholder="0">
+            </div>
+            <div class="field">
+              <label for="f-estimated">Estimated (£)</label>
+              <input type="number" id="f-estimated" min="0" placeholder="0">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="f-actual">Paid so far (£)</label>
+            <input type="number" id="f-actual" min="0" placeholder="0">
+          </div>
+
+          <div class="field">
+            <label for="f-notes">Notes</label>
+            <textarea id="f-notes" placeholder="Supplier name, payment schedule, etc."></textarea>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="btn-cancel">Cancel</button>
+          <button type="submit" class="btn-accent" id="btn-save">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="budget.js"></script>
+</body>
+</html>

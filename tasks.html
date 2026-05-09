@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Berry & Pepsi's Wedding · Tasks</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="app-logo">
+      <div class="monogram">W</div>
+      <h1>Berry & Pepsi's Wedding</h1>
+    </div>
+    <div class="header-right">
+      <span class="user-email" id="user-email"></span>
+      <button class="btn-signout" id="btn-signout">Sign out</button>
+    </div>
+  </header>
+
+  <nav class="app-nav">
+    <a href="app.html"     class="nav-link">Venues</a>
+    <a href="guests.html"  class="nav-link">Guest List</a>
+    <a href="budget.html"  class="nav-link">Budget</a>
+    <a href="tasks.html"   class="nav-link active">Tasks</a>
+  </nav>
+
+  <main class="main">
+    <div class="page-header">
+      <div class="page-title">
+        <h2>Tasks</h2>
+        <p id="task-progress-text">Track everything that needs doing</p>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn-secondary" id="btn-starter" style="font-size:13px">Load starter checklist</button>
+        <button class="btn-accent" id="btn-add">+ Add task</button>
+      </div>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="task-progress-wrap">
+      <div class="task-progress-track">
+        <div class="task-progress-fill" id="task-progress-fill"></div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters" style="margin-top:20px">
+      <button class="filter-btn active" data-filter="all">All <span class="count-badge" id="count-all">0</span></button>
+      <button class="filter-btn" data-filter="todo">To do <span class="count-badge" id="count-todo">0</span></button>
+      <button class="filter-btn" data-filter="in_progress">In progress <span class="count-badge" id="count-in-progress">0</span></button>
+      <button class="filter-btn" data-filter="done">Done <span class="count-badge" id="count-done">0</span></button>
+      <select class="sort-select" id="owner-filter">
+        <option value="all">All owners</option>
+        <option value="Berry">Berry</option>
+        <option value="Pepsi">Pepsi</option>
+        <option value="Both">Both</option>
+      </select>
+      <select class="sort-select" id="priority-filter">
+        <option value="all">All priorities</option>
+        <option value="high">High priority</option>
+        <option value="medium">Medium priority</option>
+        <option value="low">Low priority</option>
+      </select>
+    </div>
+
+    <!-- Task list -->
+    <div class="task-list" id="task-list">
+      <div class="empty-state"><h3>Loading…</h3></div>
+    </div>
+  </main>
+
+  <!-- Add / Edit Modal -->
+  <div class="modal-overlay hidden" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title">Add Task</h3>
+        <button class="btn-close" id="btn-modal-close">&times;</button>
+      </div>
+      <form id="task-form">
+        <div class="modal-body">
+
+          <div class="field">
+            <label for="f-title">Task *</label>
+            <input type="text" id="f-title" required placeholder="e.g. Book the photographer">
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="f-category">Category</label>
+              <input type="text" id="f-category" placeholder="e.g. Venue, Suppliers…" list="task-category-suggestions" autocomplete="off">
+              <datalist id="task-category-suggestions">
+                <option value="Planning">
+                <option value="Venue">
+                <option value="Guests">
+                <option value="Suppliers">
+                <option value="Attire">
+                <option value="Travel">
+                <option value="Admin">
+              </datalist>
+            </div>
+            <div class="field">
+              <label for="f-due-date">Due date</label>
+              <input type="date" id="f-due-date">
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="f-assigned">Assigned to</label>
+              <select id="f-assigned">
+                <option value="Both">Both</option>
+                <option value="Berry">Berry</option>
+                <option value="Pepsi">Pepsi</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-priority">Priority</label>
+              <select id="f-priority">
+                <option value="high">High</option>
+                <option value="medium" selected>Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="f-status">Status</label>
+            <select id="f-status">
+              <option value="todo">To do</option>
+              <option value="in_progress">In progress</option>
+              <option value="done">Done</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="f-notes">Notes</label>
+            <textarea id="f-notes" placeholder="Any extra detail…"></textarea>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="btn-cancel">Cancel</button>
+          <button type="submit" class="btn-accent" id="btn-save">Save task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="tasks.js"></script>
+</body>
+</html>
