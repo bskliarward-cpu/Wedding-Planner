@@ -76,8 +76,10 @@ function venueCard(v) {
 
   const capacity = v.capacity ? v.capacity.toLocaleString() + ' guests' : '—';
 
-  const imageBanner = v.image_url
-    ? `<div class="venue-image" style="background-image:url('${esc(v.image_url)}')"></div>`
+  const imageUrl = v.image_url
+    || (v.website_url ? `https://image.thum.io/get/width/600/crop/400/noanimate/${v.website_url}` : null);
+  const imageBanner = imageUrl
+    ? `<div class="venue-image" style="background-image:url('${esc(imageUrl)}')"></div>`
     : '';
 
   let domainHtml = '';
