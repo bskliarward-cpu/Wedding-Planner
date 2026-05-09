@@ -814,6 +814,14 @@ a.app-logo:hover { background: var(--bg); }
   white-space: nowrap;
 }
 
+.sort-th {
+  cursor: pointer;
+  user-select: none;
+}
+.sort-th:hover { color: var(--accent); }
+.sort-th.sort-active { color: var(--primary); }
+.sort-arrow { font-style: normal; }
+
 .guest-table td {
   padding: 13px 16px;
   border-bottom: 1px solid var(--border);

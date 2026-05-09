@@ -5,6 +5,8 @@ let guests        = [];
 let currentFilter = 'all';
 let currentSearch = '';
 let editingId     = null;
+let sortCol       = null;
+let sortDir       = 'asc';
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 
@@ -40,6 +42,27 @@ function renderGuests() {
     const q = currentSearch.toLowerCase();
     list = list.filter(g => g.name.toLowerCase().includes(q));
   }
+
+  if (sortCol) {
+    list.sort((a, b) => {
+      let av = a[sortCol] ?? '';
+      let bv = b[sortCol] ?? '';
+      if (typeof av === 'boolean') { av = av ? 1 : 0; bv = bv ? 1 : 0; }
+      const cmp = String(av).localeCompare(String(bv), undefined, { sensitivity: 'base', numeric: true });
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+  }
+
+  document.querySelectorAll('.sort-th').forEach(th => {
+    const arrow = th.querySelector('.sort-arrow');
+    if (th.dataset.col === sortCol) {
+      arrow.textContent = sortDir === 'asc' ? ' ↑' : ' ↓';
+      th.classList.add('sort-active');
+    } else {
+      arrow.textContent = '';
+      th.classList.remove('sort-active');
+    }
+  });
 
   if (list.length === 0) {
     const msg = guests.length === 0
@@ -207,6 +230,19 @@ function bindEvents() {
   document.getElementById('guest-search').addEventListener('input', e => {
     currentSearch = e.target.value.trim();
     renderGuests();
+  });
+
+  document.querySelectorAll('.sort-th').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.col;
+      if (sortCol === col) {
+        sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortCol = col;
+        sortDir = 'asc';
+      }
+      renderGuests();
+    });
   });
 
   document.getElementById('btn-signout').addEventListener('click', async () => {
