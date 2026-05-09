@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Our Wedding · Venues</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="app-logo">
+      <div class="monogram">W</div>
+      <h1>Our Wedding</h1>
+    </div>
+    <div class="header-right">
+      <span class="user-email" id="user-email"></span>
+      <button class="btn-signout" id="btn-signout">Sign out</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="page-header">
+      <div class="page-title">
+        <h2>Venues</h2>
+        <p>Explore and compare potential venues for the big day</p>
+      </div>
+      <button class="btn-accent" id="btn-add">+ Add venue</button>
+    </div>
+
+    <div class="filters">
+      <button class="filter-btn active" data-filter="all">
+        All <span class="count-badge" id="count-all">0</span>
+      </button>
+      <button class="filter-btn" data-filter="considering">
+        Considering <span class="count-badge" id="count-considering">0</span>
+      </button>
+      <button class="filter-btn" data-filter="shortlisted">
+        Shortlisted <span class="count-badge" id="count-shortlisted">0</span>
+      </button>
+      <button class="filter-btn" data-filter="rejected">
+        Rejected <span class="count-badge" id="count-rejected">0</span>
+      </button>
+      <select class="sort-select" id="sort-select">
+        <option value="created_at_desc">Newest first</option>
+        <option value="name_asc">Name (A–Z)</option>
+        <option value="rating_desc">Highest rated</option>
+        <option value="price_asc">Price (low–high)</option>
+        <option value="price_desc">Price (high–low)</option>
+      </select>
+    </div>
+
+    <div class="venues-grid" id="venues-grid">
+      <div class="empty-state">
+        <h3>Loading...</h3>
+      </div>
+    </div>
+  </main>
+
+  <!-- Add / Edit Modal -->
+  <div class="modal-overlay hidden" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title">Add Venue</h3>
+        <button class="btn-close" id="btn-modal-close" aria-label="Close">&times;</button>
+      </div>
+      <form id="venue-form">
+        <div class="modal-body">
+
+          <div class="field">
+            <label for="f-name">Venue name *</label>
+            <input type="text" id="f-name" required placeholder="e.g. The Old Manor House">
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="f-location">Location</label>
+              <input type="text" id="f-location" placeholder="e.g. Bath, Somerset">
+            </div>
+            <div class="field">
+              <label for="f-status">Status</label>
+              <select id="f-status">
+                <option value="considering">Considering</option>
+                <option value="shortlisted">Shortlisted</option>
+                <option value="rejected">Rejected</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="f-website">Website</label>
+            <input type="url" id="f-website" placeholder="https://www.venuename.com">
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="f-capacity">Guest capacity</label>
+              <input type="number" id="f-capacity" placeholder="e.g. 150" min="1">
+            </div>
+            <div class="field">
+              <label>Your rating</label>
+              <div class="star-input" id="star-input">
+                <button type="button" class="star-btn" data-star="1">&#9733;</button>
+                <button type="button" class="star-btn" data-star="2">&#9733;</button>
+                <button type="button" class="star-btn" data-star="3">&#9733;</button>
+                <button type="button" class="star-btn" data-star="4">&#9733;</button>
+                <button type="button" class="star-btn" data-star="5">&#9733;</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="f-price-min">Min price (£)</label>
+              <input type="number" id="f-price-min" placeholder="e.g. 5000" min="0">
+            </div>
+            <div class="field">
+              <label for="f-price-max">Max price (£)</label>
+              <input type="number" id="f-price-max" placeholder="e.g. 10000" min="0">
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="f-notes">Notes</label>
+            <textarea id="f-notes" placeholder="Parking, catering, availability, vibe…"></textarea>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="btn-cancel">Cancel</button>
+          <button type="submit" class="btn-accent" id="btn-save">Save venue</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
