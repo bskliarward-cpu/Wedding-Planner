@@ -135,6 +135,17 @@
             <textarea id="f-notes" placeholder="Parking, catering, availability, vibe…"></textarea>
           </div>
 
+          <div class="field">
+            <label for="f-image-url">Photo URL <span class="label-hint">(auto-filled from fetch — paste any image URL to override)</span></label>
+            <div class="image-field-row">
+              <input type="url" id="f-image-url" placeholder="https://…">
+              <button type="button" class="btn-clear-image" id="btn-clear-image" title="Remove photo">&#x2715;</button>
+            </div>
+            <div class="image-preview-wrap hidden" id="image-preview-wrap">
+              <img id="image-preview" src="" alt="Preview">
+            </div>
+          </div>
+
         </div>
         <div class="modal-footer">
           <button type="button" class="btn-secondary" id="btn-cancel">Cancel</button>

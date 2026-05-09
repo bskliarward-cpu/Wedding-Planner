@@ -6,7 +6,6 @@ let currentFilter  = 'all';
 let currentSort    = 'created_at_desc';
 let editingId      = null;
 let selectedRating = 0;
-let fetchedImage   = null;
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 
@@ -142,11 +141,11 @@ function updateCounts() {
 function openAdd() {
   editingId = null;
   selectedRating = 0;
-  fetchedImage = null;
   document.getElementById('modal-title').textContent = 'Add Venue';
   document.getElementById('venue-form').reset();
   document.getElementById('f-fetch-url').value = '';
   document.getElementById('fetch-status').className = 'fetch-status hidden';
+  setImageField('');
   paintStars(0);
   document.getElementById('modal-overlay').classList.remove('hidden');
   document.getElementById('f-fetch-url').focus();
@@ -158,11 +157,11 @@ function openEdit(id) {
 
   editingId = id;
   selectedRating = v.rating || 0;
-  fetchedImage = v.image_url || null;
 
   document.getElementById('modal-title').textContent = 'Edit Venue';
   document.getElementById('f-fetch-url').value = '';
   document.getElementById('fetch-status').className = 'fetch-status hidden';
+  setImageField(v.image_url || '');
   document.getElementById('f-name').value      = v.name        || '';
   document.getElementById('f-location').value  = v.location    || '';
   document.getElementById('f-website').value   = v.website_url || '';
@@ -179,7 +178,6 @@ function openEdit(id) {
 
 function closeModal() {
   document.getElementById('modal-overlay').classList.add('hidden');
-  fetchedImage = null;
   editingId = null;
 }
 
@@ -201,7 +199,7 @@ async function saveVenue(e) {
     status:      document.getElementById('f-status').value,
     rating:      selectedRating || null,
     notes:       document.getElementById('f-notes').value.trim()      || null,
-    image_url:   fetchedImage || null,
+    image_url:   document.getElementById('f-image-url').value.trim() || null,
     updated_at:  new Date().toISOString(),
   };
 
@@ -361,8 +359,9 @@ async function fetchVenueDetails() {
   const websiteEl = document.getElementById('f-website');
   if (!websiteEl.value) { websiteEl.value = url; filled++; }
 
-  if (raw.image && !fetchedImage) {
-    fetchedImage = raw.image;
+  const imageField = document.getElementById('f-image-url');
+  if (raw.image && !imageField.value) {
+    setImageField(raw.image);
     filled++;
   }
 
@@ -384,6 +383,8 @@ async function fetchVenueDetails() {
 function bindEvents() {
   document.getElementById('btn-add').addEventListener('click', openAdd);
   document.getElementById('btn-fetch').addEventListener('click', fetchVenueDetails);
+  document.getElementById('btn-clear-image').addEventListener('click', () => setImageField(''));
+  document.getElementById('f-image-url').addEventListener('input', e => setImageField(e.target.value.trim()));
   document.getElementById('f-fetch-url').addEventListener('keydown', e => {
     if (e.key === 'Enter') { e.preventDefault(); fetchVenueDetails(); }
   });
@@ -416,6 +417,22 @@ function bindEvents() {
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') closeModal();
   });
+}
+
+// ── IMAGE FIELD ───────────────────────────────────────────────────────────────
+
+function setImageField(url) {
+  const input   = document.getElementById('f-image-url');
+  const wrap    = document.getElementById('image-preview-wrap');
+  const preview = document.getElementById('image-preview');
+  input.value = url;
+  if (url) {
+    preview.src = url;
+    wrap.classList.remove('hidden');
+  } else {
+    preview.src = '';
+    wrap.classList.add('hidden');
+  }
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
