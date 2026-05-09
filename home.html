@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Berry & Pepsi's Wedding</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <a href="home.html" class="app-logo">
+      <div class="monogram">W</div>
+      <h1>Berry & Pepsi's Wedding</h1>
+    </a>
+    <div class="header-right">
+      <span class="user-email" id="user-email"></span>
+      <button class="btn-signout" id="btn-signout">Sign out</button>
+    </div>
+  </header>
+
+  <nav class="app-nav">
+    <a href="app.html"    class="nav-link">Venues</a>
+    <a href="guests.html" class="nav-link">Guest List</a>
+    <a href="budget.html" class="nav-link">Budget</a>
+    <a href="tasks.html"  class="nav-link">Tasks</a>
+  </nav>
+
+  <main class="main">
+    <div class="page-header" style="margin-bottom:32px">
+      <div class="page-title">
+        <h2 id="greeting">Good morning</h2>
+        <p id="greeting-sub">Here's where things stand with the planning.</p>
+      </div>
+    </div>
+
+    <div class="dashboard-grid" id="dashboard-grid">
+      <!-- Filled by JS -->
+    </div>
+
+    <div class="dashboard-lower">
+      <div class="dash-panel" id="panel-tasks">
+        <div class="dash-panel-header">
+          <h3>Upcoming tasks</h3>
+          <a href="tasks.html" class="dash-panel-link">View all</a>
+        </div>
+        <div id="upcoming-tasks"><p class="text-muted" style="font-size:14px">Loading…</p></div>
+      </div>
+      <div class="dash-panel" id="panel-venues">
+        <div class="dash-panel-header">
+          <h3>Shortlisted venues</h3>
+          <a href="app.html" class="dash-panel-link">View all</a>
+        </div>
+        <div id="shortlisted-venues"><p class="text-muted" style="font-size:14px">Loading…</p></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="home.js"></script>
+</body>
+</html>

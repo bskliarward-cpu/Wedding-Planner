@@ -3,7 +3,7 @@ const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Redirect if already signed in
 client.auth.getSession().then(({ data: { session } }) => {
-  if (session) window.location.href = 'app.html';
+  if (session) window.location.href = 'home.html';
 });
 
 const form   = document.getElementById('login-form');
@@ -27,6 +27,6 @@ form.addEventListener('submit', async (e) => {
     btn.disabled = false;
     btn.textContent = 'Sign in';
   } else {
-    window.location.href = 'app.html';
+    window.location.href = 'home.html';
   }
 });
