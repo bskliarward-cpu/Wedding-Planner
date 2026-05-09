@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Berry &amp; Pepsi's Wedding · Mood Board</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <a href="home.html" class="app-logo">
+      <img class="monogram" src="photo.jpg" alt="Berry &amp; Pepsi">
+      <h1>Berry &amp; Pepsi's Wedding</h1>
+    </a>
+    <div class="header-right">
+      <span class="user-email" id="user-email"></span>
+      <button class="btn-signout" id="btn-signout">Sign out</button>
+    </div>
+  </header>
+
+  <nav class="app-nav">
+    <a href="app.html"       class="nav-link">Venues</a>
+    <a href="guests.html"    class="nav-link">Guest List</a>
+    <a href="budget.html"    class="nav-link">Budget</a>
+    <a href="tasks.html"     class="nav-link">Tasks</a>
+    <a href="moodboard.html" class="nav-link active">Mood Board</a>
+  </nav>
+
+  <main class="main">
+    <div class="page-header">
+      <div class="page-title">
+        <h2>Mood Board</h2>
+        <p>Collect images, notes, and links for inspiration</p>
+      </div>
+      <button class="btn-accent" id="btn-add">+ Add</button>
+    </div>
+
+    <div class="mood-grid" id="mood-grid">
+      <div class="empty-state"><h3>Loading…</h3></div>
+    </div>
+  </main>
+
+  <!-- Add Modal -->
+  <div class="modal-overlay hidden" id="modal-overlay">
+    <div class="modal mood-modal">
+      <div class="modal-header">
+        <h3>Add to Mood Board</h3>
+        <button class="btn-close" id="btn-modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+
+        <div class="mood-type-tabs">
+          <button class="mood-type-btn active" data-type="image">Image</button>
+          <button class="mood-type-btn" data-type="note">Note</button>
+          <button class="mood-type-btn" data-type="link">Website</button>
+        </div>
+
+        <!-- Image fields -->
+        <div class="mood-fields" id="fields-image">
+          <div class="field">
+            <label for="f-image-url">Image URL</label>
+            <input type="url" id="f-image-url" placeholder="https://…">
+          </div>
+          <div class="field">
+            <label for="f-image-caption">Caption (optional)</label>
+            <input type="text" id="f-image-caption" placeholder="e.g. Love this floral arch">
+          </div>
+          <div class="mood-img-preview hidden" id="image-preview-wrap">
+            <img id="image-preview" src="" alt="preview">
+          </div>
+        </div>
+
+        <!-- Note fields -->
+        <div class="mood-fields hidden" id="fields-note">
+          <div class="field">
+            <label>Note colour</label>
+            <div class="note-colors" id="note-colors">
+              <button class="note-color-btn active" data-color="#fef9ec" style="background:#fef9ec" title="Cream"></button>
+              <button class="note-color-btn" data-color="#fde8e8" style="background:#fde8e8" title="Rose"></button>
+              <button class="note-color-btn" data-color="#e8f4e8" style="background:#e8f4e8" title="Sage"></button>
+              <button class="note-color-btn" data-color="#e8eeff" style="background:#e8eeff" title="Lavender"></button>
+              <button class="note-color-btn" data-color="#f3e8f4" style="background:#f3e8f4" title="Lilac"></button>
+              <button class="note-color-btn" data-color="#fde8d8" style="background:#fde8d8" title="Peach"></button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="f-note-text">Note</label>
+            <textarea id="f-note-text" rows="5" placeholder="Write anything…"></textarea>
+          </div>
+        </div>
+
+        <!-- Link fields -->
+        <div class="mood-fields hidden" id="fields-link">
+          <div class="field">
+            <label for="f-link-url">Website URL</label>
+            <div style="display:flex;gap:8px">
+              <input type="url" id="f-link-url" placeholder="https://…" style="flex:1">
+              <button class="btn-secondary" id="btn-fetch-link" style="white-space:nowrap">Fetch</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="f-link-title">Title</label>
+            <input type="text" id="f-link-title" placeholder="Auto-filled after Fetch">
+          </div>
+          <div class="mood-img-preview hidden" id="link-preview-wrap">
+            <img id="link-preview" src="" alt="preview">
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="btn-cancel">Cancel</button>
+        <button type="button" class="btn-accent" id="btn-save">Add to board</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="moodboard.js"></script>
+</body>
+</html>
