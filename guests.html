@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Our Wedding · Guest List</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="app-logo">
+      <div class="monogram">W</div>
+      <h1>Our Wedding</h1>
+    </div>
+    <div class="header-right">
+      <span class="user-email" id="user-email"></span>
+      <button class="btn-signout" id="btn-signout">Sign out</button>
+    </div>
+  </header>
+
+  <nav class="app-nav">
+    <a href="app.html" class="nav-link">Venues</a>
+    <a href="guests.html" class="nav-link active">Guest List</a>
+  </nav>
+
+  <main class="main">
+    <div class="page-header">
+      <div class="page-title">
+        <h2>Guest List</h2>
+        <p>Plan who to invite and track your headcount</p>
+      </div>
+      <button class="btn-accent" id="btn-add">+ Add guest</button>
+    </div>
+
+    <div class="guest-summary">
+      <div class="summary-card">
+        <div class="summary-value" id="s-definite">0</div>
+        <div class="summary-label">Definite</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-value" id="s-maybe">0</div>
+        <div class="summary-label">Maybe</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-value" id="s-not-inviting">0</div>
+        <div class="summary-label">Not inviting</div>
+      </div>
+      <div class="summary-card summary-highlight">
+        <div class="summary-value" id="s-headcount">0</div>
+        <div class="summary-label">Potential headcount</div>
+      </div>
+    </div>
+
+    <div class="filters">
+      <button class="filter-btn active" data-filter="all">All <span class="count-badge" id="count-all">0</span></button>
+      <button class="filter-btn" data-filter="definite">Definite <span class="count-badge" id="count-definite">0</span></button>
+      <button class="filter-btn" data-filter="maybe">Maybe <span class="count-badge" id="count-maybe">0</span></button>
+      <button class="filter-btn" data-filter="not_inviting">Not inviting <span class="count-badge" id="count-not-inviting">0</span></button>
+      <input type="search" class="guest-search" id="guest-search" placeholder="Search by name…">
+    </div>
+
+    <div class="table-wrap">
+      <table class="guest-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Group</th>
+            <th>Side</th>
+            <th>+1</th>
+            <th>Status</th>
+            <th>Notes</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="guest-tbody">
+          <tr><td colspan="7" class="table-empty">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <!-- Add / Edit Modal -->
+  <div class="modal-overlay hidden" id="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title">Add Guest</h3>
+        <button class="btn-close" id="btn-modal-close">&times;</button>
+      </div>
+      <form id="guest-form">
+        <div class="modal-body">
+
+          <div class="field">
+            <label for="f-name">Full name *</label>
+            <input type="text" id="f-name" required placeholder="e.g. James Smith">
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="f-status">Status</label>
+              <select id="f-status">
+                <option value="definite">Definite</option>
+                <option value="maybe" selected>Maybe</option>
+                <option value="not_inviting">Not inviting</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-group">Group</label>
+              <select id="f-group">
+                <option value="">—</option>
+                <option value="Family">Family</option>
+                <option value="Friends">Friends</option>
+                <option value="Work">Work</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="f-side">Side</label>
+              <input type="text" id="f-side" placeholder="e.g. Sarah's side">
+            </div>
+            <div class="field">
+              <label>Plus one</label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="f-plus-one">
+                <span>This guest has a +1</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="f-notes">Notes</label>
+            <textarea id="f-notes" placeholder="Relationship, dietary requirements, etc."></textarea>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="btn-cancel">Cancel</button>
+          <button type="submit" class="btn-accent" id="btn-save">Save guest</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="guests.js"></script>
+</body>
+</html>
