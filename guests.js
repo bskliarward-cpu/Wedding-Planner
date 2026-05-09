@@ -49,20 +49,24 @@ function renderGuests() {
     return;
   }
 
-  tbody.innerHTML = list.map(g => `
+  tbody.innerHTML = list.map(g => {
+    const guestTags = [];
+    if (g.plus_one) guestTags.push('<span class="plus-one-badge">+1</span>');
+    if (g.children_count > 0) guestTags.push(`<span class="children-badge">${g.children_count} child${g.children_count > 1 ? 'ren' : ''}</span>`);
+    return `
     <tr class="guest-row" onclick="openEdit('${g.id}')">
       <td class="guest-name">${esc(g.name)}</td>
       <td>${g.group_name ? `<span class="group-tag">${esc(g.group_name)}</span>` : '<span class="text-muted">—</span>'}</td>
-      <td class="text-muted">${esc(g.side || '—')}</td>
-      <td>${g.plus_one ? '<span class="plus-one-badge">+1</span>' : '<span class="text-muted">—</span>'}</td>
+      <td class="text-muted">${g.side ? esc(g.side) + '&rsquo;s side' : '—'}</td>
+      <td>${guestTags.length ? guestTags.join(' ') : '<span class="text-muted">—</span>'}</td>
       <td><span class="status-badge status-${g.status}">${statusLabel(g.status)}</span></td>
       <td class="text-muted guest-notes-cell">${esc(g.notes || '')}</td>
       <td class="guest-actions" onclick="event.stopPropagation()">
         <button class="btn-icon" onclick="openEdit('${g.id}')">Edit</button>
         <button class="btn-icon danger" onclick="confirmDelete('${g.id}', '${esc(g.name).replace(/'/g, "\\'")}')">Remove</button>
       </td>
-    </tr>
-  `).join('');
+    </tr>`;
+  }).join('');
 }
 
 function statusLabel(s) {
@@ -74,8 +78,11 @@ function updateSummary() {
   const maybes       = guests.filter(g => g.status === 'maybe');
   const notInviting  = guests.filter(g => g.status === 'not_inviting');
 
-  const definiteHeads = definites.length + definites.filter(g => g.plus_one).length;
-  const maybeHeads    = maybes.length    + maybes.filter(g => g.plus_one).length;
+  const headCount = gs => gs.length
+    + gs.filter(g => g.plus_one).length
+    + gs.reduce((sum, g) => sum + (g.children_count || 0), 0);
+  const definiteHeads = headCount(definites);
+  const maybeHeads    = headCount(maybes);
 
   document.getElementById('s-definite').textContent    = definites.length;
   document.getElementById('s-maybe').textContent       = maybes.length;
@@ -97,6 +104,7 @@ function openAdd() {
   document.getElementById('modal-title').textContent = 'Add Guest';
   document.getElementById('guest-form').reset();
   document.getElementById('f-status').value = 'maybe';
+  setChildrenUI(false, '');
   document.getElementById('modal-overlay').classList.remove('hidden');
   document.getElementById('f-name').focus();
 }
@@ -106,12 +114,13 @@ function openEdit(id) {
   if (!g) return;
   editingId = id;
   document.getElementById('modal-title').textContent  = 'Edit Guest';
-  document.getElementById('f-name').value             = g.name        || '';
-  document.getElementById('f-status').value           = g.status      || 'maybe';
-  document.getElementById('f-group').value            = g.group_name  || '';
-  document.getElementById('f-side').value             = g.side        || '';
-  document.getElementById('f-plus-one').checked       = g.plus_one    || false;
-  document.getElementById('f-notes').value            = g.notes       || '';
+  document.getElementById('f-name').value       = g.name       || '';
+  document.getElementById('f-status').value     = g.status     || 'maybe';
+  document.getElementById('f-group').value      = g.group_name || '';
+  document.getElementById('f-side').value       = g.side       || '';
+  document.getElementById('f-plus-one').checked = g.plus_one   || false;
+  document.getElementById('f-notes').value      = g.notes      || '';
+  setChildrenUI(g.children_count > 0, g.children_count || '');
   document.getElementById('modal-overlay').classList.remove('hidden');
   document.getElementById('f-name').focus();
 }
@@ -134,7 +143,10 @@ async function saveGuest(e) {
     status:     document.getElementById('f-status').value,
     group_name: document.getElementById('f-group').value    || null,
     side:       document.getElementById('f-side').value.trim() || null,
-    plus_one:   document.getElementById('f-plus-one').checked,
+    plus_one:       document.getElementById('f-plus-one').checked,
+    children_count: document.getElementById('f-has-children').checked
+                      ? (parseInt(document.getElementById('f-children-count').value) || 1)
+                      : 0,
     notes:      document.getElementById('f-notes').value.trim() || null,
     updated_at: new Date().toISOString(),
   };
@@ -187,6 +199,11 @@ function bindEvents() {
     });
   });
 
+  document.getElementById('f-has-children').addEventListener('change', e => {
+    document.getElementById('children-count-wrap').classList.toggle('hidden', !e.target.checked);
+    if (!e.target.checked) document.getElementById('f-children-count').value = '';
+  });
+
   document.getElementById('guest-search').addEventListener('input', e => {
     currentSearch = e.target.value.trim();
     renderGuests();
@@ -196,6 +213,12 @@ function bindEvents() {
     await client.auth.signOut();
     window.location.href = 'index.html';
   });
+}
+
+function setChildrenUI(hasChildren, count) {
+  document.getElementById('f-has-children').checked = hasChildren;
+  document.getElementById('f-children-count').value = count;
+  document.getElementById('children-count-wrap').classList.toggle('hidden', !hasChildren);
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────

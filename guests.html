@@ -119,14 +119,31 @@
           <div class="field-row">
             <div class="field">
               <label for="f-side">Side</label>
-              <input type="text" id="f-side" placeholder="e.g. Sarah's side">
+              <select id="f-side">
+                <option value="">—</option>
+                <option value="Bride">Bride's side</option>
+                <option value="Groom">Groom's side</option>
+              </select>
             </div>
             <div class="field">
-              <label>Plus one</label>
+              <label>Adult +1</label>
               <label class="checkbox-label">
                 <input type="checkbox" id="f-plus-one">
-                <span>This guest has a +1</span>
+                <span>Bringing a +1</span>
               </label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Children</label>
+            <div class="children-field">
+              <label class="checkbox-label">
+                <input type="checkbox" id="f-has-children">
+                <span>Bringing children</span>
+              </label>
+              <div class="children-count hidden" id="children-count-wrap">
+                <input type="number" id="f-children-count" min="1" max="20" placeholder="How many?">
+              </div>
             </div>
           </div>
 

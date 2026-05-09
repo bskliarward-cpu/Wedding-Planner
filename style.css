@@ -706,6 +706,33 @@ textarea { resize: vertical; min-height: 80px; }
   font-weight: 600;
 }
 
+.children-field {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.children-count {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.children-count input {
+  width: 110px;
+}
+
+.children-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #e0f2fe;
+  color: #0369a1;
+  font-size: 11px;
+  font-weight: 600;
+}
+
 .plus-one-badge {
   display: inline-block;
   padding: 2px 8px;
