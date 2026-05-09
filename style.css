@@ -1520,6 +1520,93 @@ a.app-logo:hover { background: var(--bg); }
 .status-task-in_progress { background: #dbeafe;               color: #1e40af;                  }
 .status-task-done        { background: var(--shortlisted-bg); color: var(--shortlisted-text);  }
 
+/* ── VENUE PRICE TYPE TOGGLE ── */
+
+.price-type-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.price-type-btn {
+  flex: 1;
+  padding: 8px 0;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.price-type-btn:hover:not(.active) { border-color: var(--accent); color: var(--accent); }
+.price-type-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+/* ── VENUE ROOMS ── */
+
+.rooms-list {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.rooms-list:empty { display: none; margin: 0; }
+
+.room-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-alt);
+}
+.room-row:last-child { border-bottom: none; }
+
+.room-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.room-row-2 {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.room-capacity { width: 110px; min-width: 80px; }
+.room-price-min, .room-price-max { width: 90px; min-width: 70px; }
+
+.room-prices {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.room-pp-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+.room-pp-label input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  min-width: 15px;
+  margin: 0;
+  accent-color: var(--primary);
+}
+
 /* ── HAMBURGER BUTTON (hidden on desktop) ── */
 
 .btn-hamburger {

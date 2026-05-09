@@ -128,13 +128,20 @@
             </div>
           </div>
 
+          <div class="field">
+            <label>Pricing</label>
+            <div class="price-type-tabs">
+              <button type="button" class="price-type-btn active" data-type="fixed">Fixed / Range</button>
+              <button type="button" class="price-type-btn" data-type="per_person">Per person</button>
+            </div>
+          </div>
           <div class="field-row">
             <div class="field">
-              <label for="f-price-min">Min price (£)</label>
+              <label for="f-price-min" id="lbl-price-min">From (£)</label>
               <input type="number" id="f-price-min" placeholder="e.g. 5000" min="0">
             </div>
             <div class="field">
-              <label for="f-price-max">Max price (£)</label>
+              <label for="f-price-max" id="lbl-price-max">To (£) <span class="label-hint">optional</span></label>
               <input type="number" id="f-price-max" placeholder="e.g. 10000" min="0">
             </div>
           </div>
@@ -143,6 +150,10 @@
             <label for="f-notes">Notes</label>
             <textarea id="f-notes" placeholder="Parking, catering, availability, vibe…"></textarea>
           </div>
+
+          <div class="modal-divider"><span>Rooms / Spaces <span class="label-hint">optional — add if this venue has multiple distinct areas</span></span></div>
+          <div class="rooms-list" id="rooms-list"></div>
+          <button type="button" class="btn-secondary" id="btn-add-room" style="width:100%;font-size:13px;margin-bottom:8px">+ Add room or space</button>
 
           <div class="field">
             <label for="f-image-url">Photo URL <span class="label-hint">(auto-filled from fetch — paste any image URL to override)</span></label>
