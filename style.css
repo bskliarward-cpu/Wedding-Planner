@@ -532,6 +532,76 @@ textarea { resize: vertical; min-height: 80px; }
   justify-content: flex-end;
 }
 
+/* ── FETCH BAR ── */
+
+.fetch-bar {
+  background: var(--accent-light);
+  border: 1.5px solid #e8d9b5;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+}
+
+.fetch-input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.fetch-input-row input {
+  flex: 1;
+  background: #fff;
+  font-size: 14px;
+  padding: 9px 13px;
+}
+
+.btn-fetch {
+  flex-shrink: 0;
+  padding: 9px 18px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.btn-fetch:hover { opacity: 0.85; }
+.btn-fetch:disabled { opacity: 0.5; cursor: default; }
+
+.fetch-status {
+  margin-top: 10px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.fetch-status.loading { color: var(--text-muted); }
+.fetch-status.success { color: var(--shortlisted-text); }
+.fetch-status.partial { color: var(--considering-text); }
+.fetch-status.error   { color: var(--rejected-text); }
+
+.modal-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+.modal-divider::before,
+.modal-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
 /* ── STAR RATING ── */
 
 .star-input { display: flex; gap: 2px; }

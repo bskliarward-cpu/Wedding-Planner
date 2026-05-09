@@ -174,6 +174,8 @@ function openEdit(id) {
 
 function closeModal() {
   document.getElementById('modal-overlay').classList.add('hidden');
+  document.getElementById('f-fetch-url').value = '';
+  document.getElementById('fetch-status').classList.add('hidden');
   editingId = null;
 }
 
@@ -251,10 +253,126 @@ function paintStars(n) {
   });
 }
 
+// ── URL FETCH ────────────────────────────────────────────────────────────────
+
+async function fetchVenueDetails() {
+  const urlInput  = document.getElementById('f-fetch-url');
+  const statusEl  = document.getElementById('fetch-status');
+  const btn       = document.getElementById('btn-fetch');
+  const url       = urlInput.value.trim();
+
+  if (!url) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Fetching…';
+  statusEl.className = 'fetch-status loading';
+  statusEl.textContent = 'Fetching page…';
+  statusEl.classList.remove('hidden');
+
+  try {
+    const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const res   = await fetch(proxy);
+    if (!res.ok) throw new Error('Proxy error');
+    const { contents } = await res.json();
+
+    const doc = new DOMParser().parseFromString(contents, 'text/html');
+
+    const meta = (prop) =>
+      doc.querySelector(`meta[property="${prop}"]`)?.content ||
+      doc.querySelector(`meta[name="${prop}"]`)?.content || '';
+
+    const raw = {
+      name:     meta('og:title') || meta('twitter:title') || doc.title || '',
+      notes:    meta('og:description') || meta('description') || meta('twitter:description') || '',
+      location: '',
+      capacity: '',
+      priceMin: '',
+      priceMax: '',
+    };
+
+    // Parse JSON-LD structured data — the richest source
+    doc.querySelectorAll('script[type="application/ld+json"]').forEach(s => {
+      try {
+        const items = [].concat(JSON.parse(s.textContent));
+        items.forEach(item => {
+          // Flatten @graph arrays
+          [].concat(item['@graph'] || item).forEach(node => {
+            if (!node || typeof node !== 'object') return;
+
+            // Location / address
+            if (!raw.location && node.address) {
+              const a = node.address;
+              raw.location = typeof a === 'string'
+                ? a
+                : [a.streetAddress, a.addressLocality, a.addressRegion, a.postalCode]
+                    .filter(Boolean).join(', ');
+            }
+
+            // Capacity
+            if (!raw.capacity && node.maximumAttendeeCapacity)
+              raw.capacity = String(node.maximumAttendeeCapacity);
+
+            // Price range — try to pull numbers out of strings like "£5,000–£15,000"
+            if (!raw.priceMin && node.priceRange) {
+              const nums = node.priceRange.replace(/,/g, '').match(/\d+/g);
+              if (nums) { raw.priceMin = nums[0]; raw.priceMax = nums[1] || ''; }
+            }
+
+            // Name fallback
+            if (!raw.name && node.name) raw.name = node.name;
+          });
+        });
+      } catch (_) {}
+    });
+
+    // Clean up the title — strip site name suffix (e.g. "Venue Name | Weddings")
+    raw.name = raw.name.replace(/\s*[|·—–-]\s*.{0,40}$/, '').trim();
+
+    // Populate fields (only if currently empty or we're in Add mode)
+    let filled = 0;
+
+    const fill = (id, value) => {
+      if (!value) return;
+      const el = document.getElementById(id);
+      if (!el.value) { el.value = value; filled++; }
+    };
+
+    fill('f-name',      raw.name);
+    fill('f-location',  raw.location);
+    fill('f-notes',     raw.notes);
+    fill('f-capacity',  raw.capacity);
+    fill('f-price-min', raw.priceMin);
+    fill('f-price-max', raw.priceMax);
+
+    // Always set the website URL from what they pasted
+    const websiteEl = document.getElementById('f-website');
+    if (!websiteEl.value) { websiteEl.value = url; filled++; }
+
+    if (filled === 0) {
+      statusEl.className = 'fetch-status partial';
+      statusEl.textContent = 'Page loaded but no details could be extracted — fill in manually.';
+    } else {
+      statusEl.className = 'fetch-status success';
+      statusEl.textContent = `Filled in ${filled} field${filled > 1 ? 's' : ''} — check and adjust as needed.`;
+    }
+
+  } catch (err) {
+    statusEl.className = 'fetch-status error';
+    statusEl.textContent = 'Could not fetch that page. Fill in manually, or try a different URL.';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Fill in';
+}
+
 // ── EVENTS ────────────────────────────────────────────────────────────────────
 
 function bindEvents() {
   document.getElementById('btn-add').addEventListener('click', openAdd);
+  document.getElementById('btn-fetch').addEventListener('click', fetchVenueDetails);
+  document.getElementById('f-fetch-url').addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); fetchVenueDetails(); }
+  });
   document.getElementById('venue-form').addEventListener('submit', saveVenue);
   document.getElementById('btn-modal-close').addEventListener('click', closeModal);
   document.getElementById('btn-cancel').addEventListener('click', closeModal);

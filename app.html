@@ -67,6 +67,16 @@
       <form id="venue-form">
         <div class="modal-body">
 
+          <div class="fetch-bar">
+            <div class="fetch-input-row">
+              <input type="url" id="f-fetch-url" placeholder="Paste a venue URL to auto-fill the form…" autocomplete="off">
+              <button type="button" class="btn-fetch" id="btn-fetch">Fill in</button>
+            </div>
+            <div id="fetch-status" class="fetch-status hidden"></div>
+          </div>
+
+          <div class="modal-divider"><span>Details</span></div>
+
           <div class="field">
             <label for="f-name">Venue name *</label>
             <input type="text" id="f-name" required placeholder="e.g. The Old Manor House">
