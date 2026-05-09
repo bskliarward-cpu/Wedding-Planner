@@ -217,7 +217,7 @@ async function saveVenue(e) {
   btn.textContent = 'Save venue';
 
   if (error) {
-    toast('Could not save venue — please try again.');
+    toast(`Could not save venue — ${error.message}`);
     console.error(error);
   } else {
     closeModal();
