@@ -112,7 +112,7 @@ function renderUpcomingTasks(t) {
     .slice(0, 5);
 
   if (!upcoming.length) {
-    el.innerHTML = `<p class="text-muted" style="font-size:14px">No pending tasks.</p>`;
+    el.innerHTML = `<p class="text-muted" style="font-size:14px;padding:16px 20px">No pending tasks.</p>`;
     return;
   }
 
@@ -132,7 +132,7 @@ function renderShortlistedVenues(v) {
   const el = document.getElementById('shortlisted-venues');
   const list = v.filter(x => x.status === 'shortlisted');
   if (!list.length) {
-    el.innerHTML = `<p class="text-muted" style="font-size:14px">No venues shortlisted yet.</p>`;
+    el.innerHTML = `<p class="text-muted" style="font-size:14px;padding:16px 20px">No venues shortlisted yet.</p>`;
     return;
   }
   el.innerHTML = list.map(v => `
