@@ -361,6 +361,8 @@ textarea { resize: vertical; min-height: 80px; }
   transition: box-shadow 0.2s, transform 0.2s;
   cursor: pointer;
   border: 1px solid transparent;
+  display: flex;
+  flex-direction: column;
 }
 .venue-card:hover {
   box-shadow: var(--shadow-lg);
@@ -415,7 +417,7 @@ textarea { resize: vertical; min-height: 80px; }
   color: var(--text-muted);
 }
 
-.venue-card-body { padding: 16px 20px; }
+.venue-card-body { padding: 16px 20px; flex: 1; }
 
 .venue-meta {
   display: flex;
