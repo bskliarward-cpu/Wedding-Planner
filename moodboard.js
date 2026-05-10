@@ -91,13 +91,18 @@ function cardMods(id) {
 }
 
 function overlayHTML(item) {
-  const pinned = item.pinned || false;
+  const pinned   = item.pinned || false;
+  const reactions = item.reactions || {};
+  const myReacted = !!reactions[currentUserEmail];
   return `
     <div class="mood-card-overlay">
       <button class="mood-action-btn ${pinned ? 'pinned' : ''}"
               onclick="togglePin('${item.id}',event)" title="${pinned ? 'Unpin' : 'Pin to top'}">&#128204;</button>
       <button class="mood-action-btn"
               onclick="editItem('${item.id}',event)" title="Edit">&#9998;</button>
+      <button class="mood-action-btn mood-action-heart ${myReacted ? 'reacted' : ''}"
+              onclick="toggleReaction('${item.id}',event)"
+              title="${myReacted ? 'Unlike' : 'Like'}">&#9829;</button>
       <button class="mood-action-btn mood-action-del"
               onclick="deleteItem('${item.id}',event)" title="Remove">&times;</button>
     </div>
@@ -116,22 +121,15 @@ function nameFromEmail(email) {
   return local.charAt(0).toUpperCase() + (local.charAt(1) || '').toUpperCase();
 }
 
-function reactionsHTML(item) {
+// Small persistent indicator shown only when someone has liked — no interactive element
+function likedIndicatorHTML(item) {
   const reactions = item.reactions || {};
-  const myReacted = !!reactions[currentUserEmail];
   const reactors  = Object.keys(reactions).filter(e => reactions[e]);
-
+  if (!reactors.length) return '';
   const chips = reactors.map(e => `
     <span class="reactor-chip ${e === currentUserEmail ? 'me' : ''}">${esc(nameFromEmail(e))}</span>
   `).join('');
-
-  return `
-    <div class="mood-reaction-bar" onclick="event.stopPropagation()">
-      <button class="reaction-heart ${myReacted ? 'reacted' : ''}"
-              onclick="toggleReaction('${item.id}',event)"
-              title="${myReacted ? 'Unlike' : 'Like'}">&#9829;</button>
-      ${chips}
-    </div>`;
+  return `<div class="mood-liked-indicator" onclick="event.stopPropagation()">&#9829; ${chips}</div>`;
 }
 
 // ── RENDER CARDS ──────────────────────────────────────────────────────────────
@@ -148,7 +146,7 @@ function renderCard(item) {
         ${overlayHTML(item)}
         ${tagsHTML(item)}
         ${item.title ? `<div class="mood-card-caption">${esc(item.title)}</div>` : ''}
-        ${reactionsHTML(item)}
+        ${likedIndicatorHTML(item)}
       </div>`;
   }
 
@@ -161,7 +159,7 @@ function renderCard(item) {
         ${overlayHTML(item)}
         <div class="mood-note-text">${esc(item.content).replace(/\n/g, '<br>')}</div>
         ${tagsHTML(item)}
-        ${reactionsHTML(item)}
+        ${likedIndicatorHTML(item)}
       </div>`;
   }
 
@@ -178,7 +176,7 @@ function renderCard(item) {
         </div>
         ${overlayHTML(item)}
         ${tagsHTML(item)}
-        ${reactionsHTML(item)}
+        ${likedIndicatorHTML(item)}
       </div>`;
   }
 
@@ -192,7 +190,7 @@ function renderCard(item) {
         </div>
         ${overlayHTML(item)}
         ${tagsHTML(item)}
-        ${reactionsHTML(item)}
+        ${likedIndicatorHTML(item)}
       </div>`;
   }
 

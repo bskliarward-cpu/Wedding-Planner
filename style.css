@@ -1809,10 +1809,12 @@ a.app-logo:hover { background: var(--bg); }
   transition: background 0.15s;
   padding: 0;
 }
-.mood-action-btn:hover         { background: rgba(0,0,0,0.65); }
-.mood-action-btn.pinned        { background: rgba(184,150,90,0.9); }
-.mood-action-btn.pinned:hover  { background: rgba(184,150,90,1); }
-.mood-action-del:hover         { background: rgba(185,40,40,0.85) !important; }
+.mood-action-btn:hover              { background: rgba(0,0,0,0.65); }
+.mood-action-btn.pinned             { background: rgba(184,150,90,0.9); }
+.mood-action-btn.pinned:hover       { background: rgba(184,150,90,1); }
+.mood-action-btn.mood-action-heart.reacted { background: rgba(224,82,117,0.85); }
+.mood-action-btn.mood-action-heart:hover   { background: rgba(224,82,117,0.85); }
+.mood-action-del:hover              { background: rgba(185,40,40,0.85) !important; }
 
 /* Pin indicator — always visible on pinned cards (top-left) */
 .mood-pin-indicator {
@@ -1828,27 +1830,15 @@ a.app-logo:hover { background: var(--bg); }
 
 /* ── MOOD BOARD: REACTIONS ── */
 
-.mood-reaction-bar {
+/* Persistent liked indicator — only shown when reactions exist */
+.mood-liked-indicator {
   display: flex;
   align-items: center;
-  gap: 5px;
-  padding: 5px 10px;
-  border-top: 1px solid rgba(0,0,0,0.06);
+  gap: 4px;
+  padding: 4px 10px 6px;
+  font-size: 12px;
+  color: #e05275;
 }
-
-.reaction-heart {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 15px;
-  color: var(--text-muted);
-  padding: 1px 3px;
-  border-radius: 4px;
-  transition: color 0.15s, transform 0.1s;
-  line-height: 1;
-}
-.reaction-heart:hover  { color: #e05275; transform: scale(1.2); }
-.reaction-heart.reacted { color: #e05275; }
 
 .reactor-chip {
   font-size: 11px;
