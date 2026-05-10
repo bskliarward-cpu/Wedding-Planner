@@ -14,6 +14,9 @@ let currentView      = localStorage.getItem('moodView') || 'masonry';
 let editingId        = null;
 let activeTag        = 'all';
 let currentUserEmail = '';
+let lightboxIndex    = -1;
+let lightboxItems    = [];
+let touchStartX      = 0;
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 
@@ -87,6 +90,9 @@ function renderItems() {
     return;
   }
   grid.innerHTML = filtered.map(renderCard).join('');
+  grid.querySelectorAll('.mood-card').forEach((card, i) => {
+    card.style.animationDelay = `${Math.min(i, 20) * 0.045}s`;
+  });
 }
 
 // ── CARD HELPERS ──────────────────────────────────────────────────────────────
@@ -159,7 +165,7 @@ function renderCard(item) {
   if (item.type === 'image') {
     const imgSrc = esc(signedUrls[item.id] || item.image_url || '');
     return `
-      <div class="mood-card mood-card-image${cls}"${style} data-id="${item.id}">
+      <div class="mood-card mood-card-image${cls}"${style} data-id="${item.id}" onclick="openLightbox('${item.id}')">
         <img src="${imgSrc}" alt="${esc(item.title || '')}" loading="lazy"
           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
         <div class="mood-img-error">Could not load image</div>
@@ -507,6 +513,66 @@ function closeModal() {
   editingId = null;
 }
 
+// ── LIGHTBOX ──────────────────────────────────────────────────────────────────
+
+function openLightbox(itemId) {
+  const filtered = activeTag === 'all'
+    ? items : items.filter(i => (i.tags || []).includes(activeTag));
+  lightboxItems = filtered.filter(i => i.type === 'image');
+  lightboxIndex = lightboxItems.findIndex(i => i.id === itemId);
+  if (lightboxIndex === -1) return;
+  showLightboxAt(lightboxIndex);
+  document.getElementById('lightbox-overlay').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function showLightboxAt(idx) {
+  const item = lightboxItems[idx];
+  const src  = signedUrls[item.id] || item.image_url || '';
+  const img  = document.getElementById('lightbox-img');
+  img.style.opacity = '0';
+  img.src = src;
+  img.onload = () => { img.style.opacity = '1'; };
+
+  const tags  = (item.tags || []).filter(Boolean);
+  let meta = '';
+  if (item.title) meta += `<div class="lightbox-caption">${esc(item.title)}</div>`;
+  if (tags.length) meta += `<div class="lightbox-tags">${tags.map(t => `<span class="mood-tag">${esc(t)}</span>`).join('')}</div>`;
+  document.getElementById('lightbox-meta').innerHTML = meta;
+
+  const total = lightboxItems.length;
+  document.getElementById('lightbox-counter').textContent = total > 1 ? `${idx + 1} / ${total}` : '';
+  document.getElementById('lightbox-prev').style.opacity = idx > 0 ? '1' : '0.2';
+  document.getElementById('lightbox-next').style.opacity = idx < total - 1 ? '1' : '0.2';
+  document.getElementById('lightbox-prev').style.pointerEvents = idx > 0 ? '' : 'none';
+  document.getElementById('lightbox-next').style.pointerEvents = idx < total - 1 ? '' : 'none';
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox-overlay').classList.add('hidden');
+  document.body.style.overflow = '';
+  lightboxIndex = -1;
+}
+
+function lightboxNav(dir) {
+  const next = lightboxIndex + dir;
+  if (next >= 0 && next < lightboxItems.length) {
+    lightboxIndex = next;
+    showLightboxAt(lightboxIndex);
+  }
+}
+
+// ── CLIPBOARD PASTE ───────────────────────────────────────────────────────────
+
+function applyPastedFile(file) {
+  selectedFile = file;
+  document.getElementById('upload-filename').textContent = file.name || 'pasted image';
+  document.getElementById('upload-filename').classList.remove('hidden');
+  document.getElementById('f-image-url').value = '';
+  document.getElementById('image-preview').src = URL.createObjectURL(file);
+  document.getElementById('image-preview-wrap').classList.remove('hidden');
+}
+
 // ── EVENTS ────────────────────────────────────────────────────────────────────
 
 function bindEvents() {
@@ -517,7 +583,52 @@ function bindEvents() {
   document.getElementById('modal-overlay').addEventListener('click', e => {
     if (e.target === e.currentTarget) closeModal();
   });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  // Lightbox events
+  document.getElementById('lightbox-overlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeLightbox();
+  });
+  document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+  document.getElementById('lightbox-prev').addEventListener('click', e => { e.stopPropagation(); lightboxNav(-1); });
+  document.getElementById('lightbox-next').addEventListener('click', e => { e.stopPropagation(); lightboxNav(1); });
+
+  // Touch swipe for lightbox
+  const lb = document.getElementById('lightbox-overlay');
+  lb.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  lb.addEventListener('touchend',   e => {
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 50) lightboxNav(diff > 0 ? 1 : -1);
+  });
+
+  // Keyboard: Escape + arrow keys
+  document.addEventListener('keydown', e => {
+    const lbOpen = !document.getElementById('lightbox-overlay').classList.contains('hidden');
+    if (e.key === 'Escape') { lbOpen ? closeLightbox() : closeModal(); return; }
+    if (lbOpen) {
+      if (e.key === 'ArrowLeft')  lightboxNav(-1);
+      if (e.key === 'ArrowRight') lightboxNav(1);
+    }
+  });
+
+  // Clipboard paste — anywhere on the page opens add modal with image pre-loaded
+  document.addEventListener('paste', e => {
+    const tag = document.activeElement?.tagName?.toLowerCase();
+    if (tag === 'input' || tag === 'textarea') return;
+    const clipItems = e.clipboardData?.items || [];
+    for (const ci of clipItems) {
+      if (ci.type.startsWith('image/')) {
+        const file = ci.getAsFile();
+        if (!file) return;
+        e.preventDefault();
+        const modalOpen = !document.getElementById('modal-overlay').classList.contains('hidden');
+        if (!modalOpen || activeType !== 'image') openModal();
+        // Set after openModal (which clears selectedFile)
+        applyPastedFile(file);
+        toast('Image pasted — add a caption and save.');
+        return;
+      }
+    }
+  });
 
   document.getElementById('btn-fetch-link').addEventListener('click', fetchLink);
 
