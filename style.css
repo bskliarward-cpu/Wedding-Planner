@@ -1990,6 +1990,60 @@ a.app-logo:hover { background: var(--bg); }
   margin-top: 4px;
 }
 
+/* ── PASTE TARGET (mobile fallback) ── */
+
+.paste-target-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.paste-target-box {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 24px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.paste-target-hint {
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.5;
+  text-align: center;
+}
+
+.paste-target-area {
+  min-height: 80px;
+  border: 2px dashed var(--accent);
+  border-radius: 10px;
+  background: var(--accent-light);
+  outline: none;
+  cursor: text;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.paste-target-area:empty::before {
+  content: 'Paste here';
+  color: var(--accent);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.paste-target-cancel {
+  align-self: center;
+}
+
 /* ── CARD ENTRANCE ANIMATION ── */
 
 @keyframes card-enter {

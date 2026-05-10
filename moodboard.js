@@ -565,32 +565,64 @@ function lightboxNav(dir) {
 // ── CLIPBOARD PASTE ───────────────────────────────────────────────────────────
 
 async function pasteFromClipboard() {
-  if (!navigator.clipboard?.read) {
-    toast('Clipboard not supported in this browser.');
-    return;
+  // Try the modern clipboard API first (works reliably on desktop)
+  if (navigator.clipboard?.read) {
+    try {
+      const clipItems = await navigator.clipboard.read();
+      for (const ci of clipItems) {
+        const imageType = ci.types.find(t => t.startsWith('image/'));
+        if (imageType) {
+          const blob = await ci.getType(imageType);
+          const ext  = imageType.split('/')[1] || 'png';
+          const file = new File([blob], `pasted.${ext}`, { type: imageType });
+          openModal();
+          applyPastedFile(file);
+          toast('Image pasted — add a caption and save.');
+          return;
+        }
+      }
+      toast('No image found in clipboard.');
+      return;
+    } catch (err) {
+      // Fall through to the manual paste target (common on mobile)
+    }
   }
-  try {
-    const clipItems = await navigator.clipboard.read();
+  // Mobile fallback: show a focused paste-target div the user can long-press → Paste
+  showPasteTarget();
+}
+
+function showPasteTarget() {
+  const overlay = document.createElement('div');
+  overlay.className = 'paste-target-overlay';
+  overlay.innerHTML = `
+    <div class="paste-target-box">
+      <p class="paste-target-hint">Tap and hold the box below, then tap <strong>Paste</strong></p>
+      <div class="paste-target-area" id="paste-target-area" contenteditable="true"></div>
+      <button class="btn-secondary paste-target-cancel" id="paste-target-cancel">Cancel</button>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+  setTimeout(() => document.getElementById('paste-target-area')?.focus(), 80);
+
+  document.getElementById('paste-target-area').addEventListener('paste', e => {
+    const clipItems = e.clipboardData?.items || [];
     for (const ci of clipItems) {
-      const imageType = ci.types.find(t => t.startsWith('image/'));
-      if (imageType) {
-        const blob = await ci.getType(imageType);
-        const ext  = imageType.split('/')[1] || 'png';
-        const file = new File([blob], `pasted.${ext}`, { type: imageType });
+      if (ci.type.startsWith('image/')) {
+        const file = ci.getAsFile();
+        overlay.remove();
         openModal();
         applyPastedFile(file);
         toast('Image pasted — add a caption and save.');
         return;
       }
     }
-    toast('No image found in clipboard.');
-  } catch (err) {
-    if (err.name === 'NotAllowedError') {
-      toast('Allow clipboard access when prompted and try again.');
-    } else {
-      toast('Could not read clipboard.');
-    }
-  }
+    // If only text was pasted, clear it and re-focus
+    document.getElementById('paste-target-area').textContent = '';
+    toast('That was text, not an image. Try copying a photo first.');
+  });
+
+  document.getElementById('paste-target-cancel').addEventListener('click', () => overlay.remove());
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
 }
 
 function applyPastedFile(file) {
