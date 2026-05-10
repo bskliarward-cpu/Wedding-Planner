@@ -564,6 +564,35 @@ function lightboxNav(dir) {
 
 // ── CLIPBOARD PASTE ───────────────────────────────────────────────────────────
 
+async function pasteFromClipboard() {
+  if (!navigator.clipboard?.read) {
+    toast('Clipboard not supported in this browser.');
+    return;
+  }
+  try {
+    const clipItems = await navigator.clipboard.read();
+    for (const ci of clipItems) {
+      const imageType = ci.types.find(t => t.startsWith('image/'));
+      if (imageType) {
+        const blob = await ci.getType(imageType);
+        const ext  = imageType.split('/')[1] || 'png';
+        const file = new File([blob], `pasted.${ext}`, { type: imageType });
+        openModal();
+        applyPastedFile(file);
+        toast('Image pasted — add a caption and save.');
+        return;
+      }
+    }
+    toast('No image found in clipboard.');
+  } catch (err) {
+    if (err.name === 'NotAllowedError') {
+      toast('Allow clipboard access when prompted and try again.');
+    } else {
+      toast('Could not read clipboard.');
+    }
+  }
+}
+
 function applyPastedFile(file) {
   selectedFile = file;
   document.getElementById('upload-filename').textContent = file.name || 'pasted image';
@@ -577,6 +606,7 @@ function applyPastedFile(file) {
 
 function bindEvents() {
   document.getElementById('btn-add').addEventListener('click', () => openModal());
+  document.getElementById('btn-paste').addEventListener('click', pasteFromClipboard);
   document.getElementById('btn-save').addEventListener('click', saveItem);
   document.getElementById('btn-modal-close').addEventListener('click', closeModal);
   document.getElementById('btn-cancel').addEventListener('click', closeModal);
