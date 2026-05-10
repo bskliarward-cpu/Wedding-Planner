@@ -566,7 +566,7 @@ function lightboxNav(dir) {
 
 async function pasteFromClipboard() {
   // Mobile: clipboard.read() hangs unreliably — go straight to the paste target
-  if (navigator.maxTouchPoints > 0) { showPasteTarget(); return; }
+  if (window.matchMedia('(pointer: coarse)').matches) { showPasteTarget(); return; }
 
   // Desktop: try clipboard.read() for instant populated modal
   if (!navigator.clipboard?.read) { showPasteTarget(); return; }
