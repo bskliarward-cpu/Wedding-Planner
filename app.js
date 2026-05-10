@@ -149,13 +149,6 @@ function venueCard(v) {
       </div>
       <div class="venue-card-footer">
         ${domainHtml || '<span></span>'}
-        <div class="rank-field" onclick="event.stopPropagation()" title="Contact priority (1 = first to contact)">
-          <span class="rank-hash">#</span>
-          <input type="number" class="rank-input" min="1" max="99"
-                 value="${v.rank || ''}" placeholder="—"
-                 onchange="updateRank('${v.id}', this.value)"
-                 onkeydown="if(event.key==='Enter')this.blur()">
-        </div>
         <div class="card-actions" onclick="event.stopPropagation()">
           <button class="btn-icon" onclick="openEdit('${v.id}')">Edit</button>
           <button class="btn-icon danger" onclick="confirmDelete('${v.id}', '${esc(v.name).replace(/'/g, "\\'")}')">Delete</button>
@@ -187,6 +180,7 @@ function openAdd() {
   editingRooms = [];
   document.getElementById('modal-title').textContent = 'Add Venue';
   document.getElementById('venue-form').reset();
+  document.getElementById('f-rank').value = '';
   document.getElementById('f-fetch-url').value = '';
   document.getElementById('fetch-status').className = 'fetch-status hidden';
   setImageField('');
@@ -217,6 +211,7 @@ function openEdit(id) {
   document.getElementById('f-price-max').value = v.price_max   || '';
   document.getElementById('f-status').value    = v.status      || 'considering';
   document.getElementById('f-notes').value     = v.notes       || '';
+  document.getElementById('f-rank').value      = v.rank        || '';
   setPriceType(v.price_type || 'fixed');
   paintStars(selectedRating);
   renderRooms();
@@ -317,6 +312,7 @@ async function saveVenue(e) {
     price_type:  activePriceType,
     status:      document.getElementById('f-status').value,
     rating:      selectedRating || null,
+    rank:        parseInt(document.getElementById('f-rank').value) || null,
     notes:       document.getElementById('f-notes').value.trim()     || null,
     image_url:   document.getElementById('f-image-url').value.trim() || null,
     updated_at:  new Date().toISOString(),
@@ -369,19 +365,6 @@ async function saveRooms(venueId) {
   })));
 }
 
-async function updateRank(id, value) {
-  const rank = parseInt(value) || null;
-  const { error } = await client.from('venues').update({ rank }).eq('id', id);
-  if (!error) {
-    const v = venues.find(v => v.id === id);
-    if (v) v.rank = rank;
-    if (currentSort === 'rank_asc') renderVenues();
-    else {
-      // Just re-render the badge without a full reload
-      renderVenues();
-    }
-  }
-}
 
 async function confirmDelete(id, name) {
   if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;

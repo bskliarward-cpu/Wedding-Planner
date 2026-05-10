@@ -1605,38 +1605,6 @@ a.app-logo:hover { background: var(--bg); }
   letter-spacing: 0.3px;
 }
 
-.rank-field {
-  display: flex;
-  align-items: center;
-  gap: 1px;
-}
-
-.rank-hash {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-muted);
-  line-height: 1;
-}
-
-.rank-input {
-  width: 26px;
-  padding: 0 2px;
-  font-size: 13px;
-  font-weight: 700;
-  border: none;
-  border-bottom: 1.5px solid transparent;
-  border-radius: 0;
-  background: transparent;
-  text-align: center;
-  color: var(--accent);
-  font-family: inherit;
-  outline: none;
-  transition: border-color 0.15s;
-}
-.rank-input:hover, .rank-input:focus { border-bottom-color: var(--border); }
-.rank-input::placeholder { color: var(--border); font-weight: 400; }
-.rank-input::-webkit-inner-spin-button,
-.rank-input::-webkit-outer-spin-button { opacity: 0; }
 
 /* ── VENUE PRICE TYPE TOGGLE ── */
 
