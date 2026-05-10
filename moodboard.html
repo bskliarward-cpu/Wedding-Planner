@@ -34,7 +34,14 @@
         <h2>Mood Board</h2>
         <p>Collect images, notes, and links for inspiration</p>
       </div>
-      <button class="btn-accent" id="btn-add">+ Add</button>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <div class="view-toggle" id="view-toggle">
+          <button class="view-btn active" data-view="masonry" title="Masonry columns">Masonry</button>
+          <button class="view-btn" data-view="mosaic"  title="Mixed sizes">Mosaic</button>
+          <button class="view-btn" data-view="scatter" title="Scattered layout">Scatter</button>
+        </div>
+        <button class="btn-accent" id="btn-add">+ Add</button>
+      </div>
     </div>
 
     <div class="mood-grid" id="mood-grid">

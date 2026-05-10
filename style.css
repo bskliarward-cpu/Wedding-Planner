@@ -937,10 +937,83 @@ a.app-logo:hover { background: var(--bg); }
 
 /* ── MOOD BOARD ── */
 
+/* View toggle buttons */
+.view-toggle {
+  display: flex;
+  gap: 3px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 3px;
+}
+
+.view-btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.view-btn:hover { color: var(--text); }
+.view-btn.active { background: var(--primary); color: #fff; }
+
+/* ── Masonry (default) ── */
 .mood-grid {
   columns: 3 280px;
   column-gap: 18px;
   margin-top: 8px;
+}
+
+/* ── Mosaic: 4-col grid, some cards span 2 cols ── */
+.mood-grid-mosaic {
+  columns: unset;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-flow: dense;
+  gap: 16px;
+  align-items: start;
+  margin-top: 8px;
+}
+
+.mood-grid-mosaic .mood-card {
+  break-inside: unset;
+  margin-bottom: 0;
+}
+
+.mood-grid-mosaic .card-wide {
+  grid-column: span 2;
+}
+
+/* ── Scatter: rotated cards on a warm board ── */
+.mood-grid-scatter {
+  columns: 3 260px;
+  column-gap: 28px;
+  margin-top: 8px;
+  padding: 28px 24px 32px;
+  border-radius: 18px;
+  background-color: #ede4d3;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%23e8dcc8'/%3E%3Crect x='0' y='0' width='1' height='1' fill='%23e0d4be' opacity='0.6'/%3E%3Crect x='2' y='2' width='1' height='1' fill='%23e0d4be' opacity='0.4'/%3E%3C/svg%3E");
+}
+
+.mood-grid-scatter .mood-card {
+  margin-bottom: 28px;
+  box-shadow: 3px 4px 16px rgba(0,0,0,0.18), 0 1px 4px rgba(0,0,0,0.1);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  transform-origin: center center;
+}
+
+.mood-grid-scatter .mood-card:hover {
+  transform: rotate(0deg) scale(1.05) !important;
+  box-shadow: 6px 10px 32px rgba(0,0,0,0.22);
+  position: relative;
+  z-index: 10;
 }
 
 .mood-card {
@@ -1723,8 +1796,11 @@ a.app-logo:hover { background: var(--bg); }
   .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
   .dashboard-lower { grid-template-columns: 1fr; }
 
-  /* Mood board — single column */
+  /* Mood board — single column on mobile */
   .mood-grid { columns: 1; }
+  .mood-grid-mosaic { grid-template-columns: 1fr 1fr; }
+  .mood-grid-mosaic .card-wide { grid-column: span 2; }
+  .mood-grid-scatter { columns: 1; padding: 16px; }
 
   /* Filters — allow wrapping */
   .sort-select { margin-left: 0; width: 100%; }

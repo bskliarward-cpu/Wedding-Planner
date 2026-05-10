@@ -5,6 +5,7 @@ let items         = [];
 let activeType    = 'image';
 let selectedColor = '#fef9ec';
 let fetchedImgUrl = '';
+let currentView   = localStorage.getItem('moodView') || 'masonry';
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 
@@ -12,6 +13,8 @@ async function init() {
   const { data: { session } } = await client.auth.getSession();
   if (!session) { window.location.href = 'index.html'; return; }
   document.getElementById('user-email').textContent = session.user.email;
+  // Restore active view button
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === currentView));
   await loadItems();
   bindEvents();
 }
@@ -32,6 +35,8 @@ async function loadItems() {
 
 function renderItems() {
   const grid = document.getElementById('mood-grid');
+  grid.className = `mood-grid mood-grid-${currentView}`;
+
   if (items.length === 0) {
     grid.innerHTML = `
       <div class="empty-state">
@@ -43,10 +48,30 @@ function renderItems() {
   grid.innerHTML = items.map(renderCard).join('');
 }
 
+// Seeded pseudo-random from item ID — stable across renders
+function seededRand(id, seed) {
+  let h = seed * 2654435761;
+  for (const c of id) h = Math.imul(h ^ c.charCodeAt(0), 2654435761);
+  return (h >>> 0) / 0xffffffff;
+}
+
+function cardMods(id) {
+  const r0 = seededRand(id, 0);
+  const r1 = seededRand(id, 1);
+  const isWide  = currentView === 'mosaic'  && r1 > 0.42;
+  const rot     = currentView === 'scatter' ? (r0 - 0.5) * 14 : 0; // -7° to +7°
+  return {
+    cls:   isWide ? ' card-wide' : '',
+    style: rot ? ` style="transform:rotate(${rot.toFixed(2)}deg)"` : '',
+  };
+}
+
 function renderCard(item) {
+  const { cls, style } = cardMods(item.id);
+
   if (item.type === 'image') {
     return `
-      <div class="mood-card mood-card-image" data-id="${item.id}">
+      <div class="mood-card mood-card-image${cls}"${style} data-id="${item.id}">
         <img src="${esc(item.image_url)}" alt="${esc(item.title || '')}" loading="lazy"
           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
         <div class="mood-img-error">Could not load image</div>
@@ -56,7 +81,7 @@ function renderCard(item) {
   }
   if (item.type === 'note') {
     return `
-      <div class="mood-card mood-card-note" style="background:${esc(item.color || '#fef9ec')}" data-id="${item.id}">
+      <div class="mood-card mood-card-note${cls}"${style} style="background:${esc(item.color || '#fef9ec')}${rot_inline(item.id)}" data-id="${item.id}">
         <div class="mood-note-text">${esc(item.content).replace(/\n/g, '<br>')}</div>
         <button class="mood-delete" onclick="deleteItem('${item.id}',event)" title="Remove">&times;</button>
       </div>`;
@@ -65,7 +90,7 @@ function renderCard(item) {
     let domain = item.content;
     try { domain = new URL(item.content).hostname.replace(/^www\./, ''); } catch {}
     return `
-      <div class="mood-card mood-card-link" data-id="${item.id}" onclick="window.open('${esc(item.content)}','_blank')">
+      <div class="mood-card mood-card-link${cls}"${style} data-id="${item.id}" onclick="window.open('${esc(item.content)}','_blank')">
         ${item.image_url ? `<img src="${esc(item.image_url)}" alt="${esc(item.title || '')}" loading="lazy" onerror="this.style.display='none'">` : ''}
         <div class="mood-link-body">
           ${item.title ? `<div class="mood-link-title">${esc(item.title)}</div>` : ''}
@@ -75,6 +100,22 @@ function renderCard(item) {
       </div>`;
   }
   return '';
+}
+
+// Note cards need the rotation merged into their existing inline style
+function rot_inline(id) {
+  if (currentView !== 'scatter') return '';
+  const rot = (seededRand(id, 0) - 0.5) * 14;
+  return `;transform:rotate(${rot.toFixed(2)}deg)`;
+}
+
+// ── VIEW ──────────────────────────────────────────────────────────────────────
+
+function setView(view) {
+  currentView = view;
+  localStorage.setItem('moodView', view);
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  renderItems();
 }
 
 // ── SAVE / DELETE ─────────────────────────────────────────────────────────────
@@ -151,9 +192,9 @@ async function fetchLink() {
 
   if (!html) { toast('Could not fetch that page.'); return; }
 
-  const doc   = new DOMParser().parseFromString(html, 'text/html');
-  const meta  = prop => doc.querySelector(`meta[property="${prop}"]`)?.content
-                      || doc.querySelector(`meta[name="${prop}"]`)?.content || '';
+  const doc  = new DOMParser().parseFromString(html, 'text/html');
+  const meta = prop => doc.querySelector(`meta[property="${prop}"]`)?.content
+                     || doc.querySelector(`meta[name="${prop}"]`)?.content || '';
 
   const title = meta('og:title') || doc.title || '';
   const image = meta('og:image') || '';
@@ -209,6 +250,10 @@ function bindEvents() {
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
   document.getElementById('btn-fetch-link').addEventListener('click', fetchLink);
+
+  document.querySelectorAll('.view-btn').forEach(btn => {
+    btn.addEventListener('click', () => setView(btn.dataset.view));
+  });
 
   document.querySelectorAll('.mood-type-btn').forEach(btn => {
     btn.addEventListener('click', () => {
