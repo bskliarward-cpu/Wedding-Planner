@@ -70,6 +70,13 @@
         <!-- Image fields -->
         <div class="mood-fields" id="fields-image">
           <div class="field">
+            <label>Upload from device</label>
+            <label class="btn-upload" for="f-image-file">&#128247; Choose image…</label>
+            <input type="file" id="f-image-file" accept="image/*" class="hidden">
+            <div class="upload-filename hidden" id="upload-filename"></div>
+          </div>
+          <div class="modal-divider">or paste a URL</div>
+          <div class="field">
             <label for="f-image-url">Image URL</label>
             <input type="url" id="f-image-url" placeholder="https://…">
           </div>

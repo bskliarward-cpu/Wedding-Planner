@@ -1954,6 +1954,34 @@ a.app-logo:hover { background: var(--bg); }
   font-family: 'Courier New', monospace;
 }
 
+/* ── MOOD BOARD MODAL: file upload button ── */
+
+.btn-upload {
+  display: block;
+  padding: 10px 16px;
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 14px;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.btn-upload:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+.upload-filename {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--accent);
+  background: var(--accent-light);
+  border-radius: 6px;
+  padding: 5px 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ── MOOD BOARD MODAL: shared tags field ── */
 
 .mood-tags-field {

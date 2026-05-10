@@ -1,10 +1,13 @@
 const { createClient } = supabase;
 const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+const STORAGE_BUCKET  = 'mood-images';
+
 let items            = [];
 let activeType       = 'image';
 let selectedColor    = '#fef9ec';
 let fetchedImgUrl    = '';
+let selectedFile     = null;
 let currentView      = localStorage.getItem('moodView') || 'masonry';
 let editingId        = null;
 let activeTag        = 'all';
@@ -263,9 +266,19 @@ async function saveItem() {
   let payload = { type: activeType, tags };
 
   if (activeType === 'image') {
-    const url = document.getElementById('f-image-url').value.trim();
-    if (!url) { toast('Please enter an image URL.'); resetBtn(btn); return; }
-    payload.image_url = url;
+    const urlInput = document.getElementById('f-image-url').value.trim();
+    if (selectedFile) {
+      btn.textContent = 'Uploading…';
+      try {
+        payload.image_url = await uploadImage(selectedFile);
+      } catch (err) {
+        toast('Upload failed — ' + err.message); resetBtn(btn); return;
+      }
+    } else if (urlInput) {
+      payload.image_url = urlInput;
+    } else {
+      toast('Please upload an image or paste a URL.'); resetBtn(btn); return;
+    }
     payload.title = document.getElementById('f-image-caption').value.trim() || null;
 
   } else if (activeType === 'note') {
@@ -310,10 +323,33 @@ function resetBtn(btn) {
 async function deleteItem(id, e) {
   e.stopPropagation();
   if (!confirm('Remove this from the mood board?')) return;
+  const item = items.find(i => i.id === id);
   const { error } = await client.from('mood_items').delete().eq('id', id);
   if (error) { toast('Could not remove.'); return; }
+  // Clean up storage file if the image was uploaded (not an external URL)
+  if (item?.image_url) {
+    const path = storagePathFromUrl(item.image_url);
+    if (path) await client.storage.from(STORAGE_BUCKET).remove([path]);
+  }
   toast('Removed.');
   loadItems();
+}
+
+// ── IMAGE UPLOAD ──────────────────────────────────────────────────────────────
+
+async function uploadImage(file) {
+  const ext  = file.name.split('.').pop().toLowerCase() || 'jpg';
+  const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const { error } = await client.storage.from(STORAGE_BUCKET).upload(path, file);
+  if (error) throw error;
+  const { data } = client.storage.from(STORAGE_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+function storagePathFromUrl(url) {
+  const marker = `/object/public/${STORAGE_BUCKET}/`;
+  const idx = url.indexOf(marker);
+  return idx !== -1 ? url.slice(idx + marker.length) : null;
 }
 
 // ── LINK FETCH ────────────────────────────────────────────────────────────────
@@ -361,9 +397,13 @@ async function fetchLink() {
 function openModal(item = null) {
   editingId     = item ? item.id : null;
   fetchedImgUrl = '';
+  selectedFile  = null;
   selectedColor = '#fef9ec';
 
   // Clear all inputs
+  document.getElementById('f-image-file').value = '';
+  document.getElementById('upload-filename').textContent = '';
+  document.getElementById('upload-filename').classList.add('hidden');
   ['f-image-url','f-image-caption','f-note-text','f-link-url','f-link-title','f-color-label','f-tags'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
@@ -476,9 +516,25 @@ function bindEvents() {
     });
   });
 
+  document.getElementById('f-image-file').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    selectedFile = file;
+    document.getElementById('upload-filename').textContent = file.name;
+    document.getElementById('upload-filename').classList.remove('hidden');
+    // Preview the local file and clear the URL input
+    document.getElementById('f-image-url').value = '';
+    document.getElementById('image-preview').src = URL.createObjectURL(file);
+    document.getElementById('image-preview-wrap').classList.remove('hidden');
+  });
+
   document.getElementById('f-image-url').addEventListener('input', e => {
     const url = e.target.value.trim();
     if (url) {
+      // Clear any selected file when a URL is typed
+      selectedFile = null;
+      document.getElementById('f-image-file').value = '';
+      document.getElementById('upload-filename').classList.add('hidden');
       document.getElementById('image-preview').src = url;
       document.getElementById('image-preview-wrap').classList.remove('hidden');
     } else {
