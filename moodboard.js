@@ -564,30 +564,7 @@ function lightboxNav(dir) {
 
 // ── CLIPBOARD PASTE ───────────────────────────────────────────────────────────
 
-async function pasteFromClipboard() {
-  // Try the modern clipboard API first (works reliably on desktop)
-  if (navigator.clipboard?.read) {
-    try {
-      const clipItems = await navigator.clipboard.read();
-      for (const ci of clipItems) {
-        const imageType = ci.types.find(t => t.startsWith('image/'));
-        if (imageType) {
-          const blob = await ci.getType(imageType);
-          const ext  = imageType.split('/')[1] || 'png';
-          const file = new File([blob], `pasted.${ext}`, { type: imageType });
-          openModal();
-          applyPastedFile(file);
-          toast('Image pasted — add a caption and save.');
-          return;
-        }
-      }
-      toast('No image found in clipboard.');
-      return;
-    } catch (err) {
-      // Fall through to the manual paste target (common on mobile)
-    }
-  }
-  // Mobile fallback: show a focused paste-target div the user can long-press → Paste
+function pasteFromClipboard() {
   showPasteTarget();
 }
 
@@ -596,7 +573,7 @@ function showPasteTarget() {
   overlay.className = 'paste-target-overlay';
   overlay.innerHTML = `
     <div class="paste-target-box">
-      <p class="paste-target-hint">Tap and hold the box below, then tap <strong>Paste</strong></p>
+      <p class="paste-target-hint">On mobile: tap and hold the box, then tap <strong>Paste</strong><br>On desktop: click the box and press <strong>Ctrl+V</strong></p>
       <div class="paste-target-area" id="paste-target-area" contenteditable="true"></div>
       <button class="btn-secondary paste-target-cancel" id="paste-target-cancel">Cancel</button>
     </div>
