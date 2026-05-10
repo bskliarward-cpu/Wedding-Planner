@@ -149,8 +149,8 @@ function venueCard(v) {
       </div>
       <div class="venue-card-footer">
         ${domainHtml || '<span></span>'}
-        <div class="rank-field" onclick="event.stopPropagation()" title="Contact priority — 1 = contact first">
-          <span class="rank-label">Priority</span>
+        <div class="rank-field" onclick="event.stopPropagation()" title="Contact priority (1 = first to contact)">
+          <span class="rank-hash">#</span>
           <input type="number" class="rank-input" min="1" max="99"
                  value="${v.rank || ''}" placeholder="—"
                  onchange="updateRank('${v.id}', this.value)"
