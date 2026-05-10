@@ -2,8 +2,10 @@ const { createClient } = supabase;
 const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const STORAGE_BUCKET  = 'mood-images';
+const STORAGE_PREFIX  = 'storage:'; // prefix stored in DB to flag uploaded images
 
 let items            = [];
+let signedUrls       = {}; // { itemId: signedUrl } — resolved each load, not stored in DB
 let activeType       = 'image';
 let selectedColor    = '#fef9ec';
 let fetchedImgUrl    = '';
@@ -33,10 +35,24 @@ async function loadItems() {
     .select('*')
     .order('created_at', { ascending: false });
   if (error) { console.error(error); return; }
-  // Pinned items sort to top, then by created_at desc
+  signedUrls = {};
   items = (data || []).sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+  await resolveSignedUrls(items);
   renderTagFilter();
   renderItems();
+}
+
+async function resolveSignedUrls(itemList) {
+  const needsSigning = itemList.filter(i => i.image_url?.startsWith(STORAGE_PREFIX));
+  if (!needsSigning.length) return;
+
+  const paths = needsSigning.map(i => i.image_url.slice(STORAGE_PREFIX.length));
+  const { data } = await client.storage.from(STORAGE_BUCKET).createSignedUrls(paths, 3600);
+  if (!data) return;
+
+  needsSigning.forEach((item, idx) => {
+    if (data[idx]?.signedUrl) signedUrls[item.id] = data[idx].signedUrl;
+  });
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
@@ -141,9 +157,10 @@ function renderCard(item) {
   const { cls, style, rot } = cardMods(item.id);
 
   if (item.type === 'image') {
+    const imgSrc = esc(signedUrls[item.id] || item.image_url || '');
     return `
       <div class="mood-card mood-card-image${cls}"${style} data-id="${item.id}">
-        <img src="${esc(item.image_url)}" alt="${esc(item.title || '')}" loading="lazy"
+        <img src="${imgSrc}" alt="${esc(item.title || '')}" loading="lazy"
           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
         <div class="mood-img-error">Could not load image</div>
         ${overlayHTML(item)}
@@ -266,16 +283,24 @@ async function saveItem() {
   let payload = { type: activeType, tags };
 
   if (activeType === 'image') {
-    const urlInput = document.getElementById('f-image-url').value.trim();
+    const urlInput  = document.getElementById('f-image-url').value.trim();
+    const existing  = editingId ? items.find(i => i.id === editingId) : null;
     if (selectedFile) {
       btn.textContent = 'Uploading…';
       try {
+        // Delete old storage file if replacing an uploaded image
+        if (existing) {
+          const oldPath = storagePath(existing.image_url);
+          if (oldPath) await client.storage.from(STORAGE_BUCKET).remove([oldPath]);
+        }
         payload.image_url = await uploadImage(selectedFile);
       } catch (err) {
         toast('Upload failed — ' + err.message); resetBtn(btn); return;
       }
     } else if (urlInput) {
       payload.image_url = urlInput;
+    } else if (existing?.image_url) {
+      payload.image_url = existing.image_url; // keep existing image unchanged
     } else {
       toast('Please upload an image or paste a URL.'); resetBtn(btn); return;
     }
@@ -326,9 +351,9 @@ async function deleteItem(id, e) {
   const item = items.find(i => i.id === id);
   const { error } = await client.from('mood_items').delete().eq('id', id);
   if (error) { toast('Could not remove.'); return; }
-  // Clean up storage file if the image was uploaded (not an external URL)
+  // Clean up storage file if the image was uploaded
   if (item?.image_url) {
-    const path = storagePathFromUrl(item.image_url);
+    const path = storagePath(item.image_url);
     if (path) await client.storage.from(STORAGE_BUCKET).remove([path]);
   }
   toast('Removed.');
@@ -342,14 +367,11 @@ async function uploadImage(file) {
   const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
   const { error } = await client.storage.from(STORAGE_BUCKET).upload(path, file);
   if (error) throw error;
-  const { data } = client.storage.from(STORAGE_BUCKET).getPublicUrl(path);
-  return data.publicUrl;
+  return STORAGE_PREFIX + path; // stored in DB as "storage:filename.ext"
 }
 
-function storagePathFromUrl(url) {
-  const marker = `/object/public/${STORAGE_BUCKET}/`;
-  const idx = url.indexOf(marker);
-  return idx !== -1 ? url.slice(idx + marker.length) : null;
+function storagePath(imageUrl) {
+  return imageUrl?.startsWith(STORAGE_PREFIX) ? imageUrl.slice(STORAGE_PREFIX.length) : null;
 }
 
 // ── LINK FETCH ────────────────────────────────────────────────────────────────
@@ -427,10 +449,13 @@ function openModal(item = null) {
     document.getElementById('f-tags').value = (item.tags || []).join(', ');
 
     if (item.type === 'image') {
-      document.getElementById('f-image-url').value     = item.image_url || '';
-      document.getElementById('f-image-caption').value = item.title     || '';
-      if (item.image_url) {
-        document.getElementById('image-preview').src = item.image_url;
+      // For storage items don't put the "storage:path" value in the URL field
+      const isStorageItem = item.image_url?.startsWith(STORAGE_PREFIX);
+      if (!isStorageItem) document.getElementById('f-image-url').value = item.image_url || '';
+      document.getElementById('f-image-caption').value = item.title || '';
+      const previewUrl = signedUrls[item.id] || (!isStorageItem ? item.image_url : null);
+      if (previewUrl) {
+        document.getElementById('image-preview').src = previewUrl;
         document.getElementById('image-preview-wrap').classList.remove('hidden');
       }
     } else if (item.type === 'note') {
