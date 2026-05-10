@@ -564,8 +564,30 @@ function lightboxNav(dir) {
 
 // ── CLIPBOARD PASTE ───────────────────────────────────────────────────────────
 
-function pasteFromClipboard() {
-  showPasteTarget();
+async function pasteFromClipboard() {
+  // Mobile: clipboard.read() hangs unreliably — go straight to the paste target
+  if (navigator.maxTouchPoints > 0) { showPasteTarget(); return; }
+
+  // Desktop: try clipboard.read() for instant populated modal
+  if (!navigator.clipboard?.read) { showPasteTarget(); return; }
+  try {
+    const clipItems = await navigator.clipboard.read();
+    for (const ci of clipItems) {
+      const imageType = ci.types.find(t => t.startsWith('image/'));
+      if (imageType) {
+        const blob = await ci.getType(imageType);
+        const ext  = imageType.split('/')[1] || 'png';
+        const file = new File([blob], `pasted.${ext}`, { type: imageType });
+        openModal();
+        applyPastedFile(file);
+        toast('Image pasted — add a caption and save.');
+        return;
+      }
+    }
+    toast('No image found in clipboard.');
+  } catch {
+    showPasteTarget();
+  }
 }
 
 function showPasteTarget() {
