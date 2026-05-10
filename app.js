@@ -48,6 +48,7 @@ function renderVenues() {
       case 'rating_desc': return (b.rating || 0) - (a.rating || 0);
       case 'price_asc':   return (effectiveMinPrice(a) || 0) - (effectiveMinPrice(b) || 0);
       case 'price_desc':  return (effectiveMinPrice(b) || 0) - (effectiveMinPrice(a) || 0);
+      case 'rank_asc':    return (a.rank || 9999) - (b.rank || 9999);
       default:            return new Date(b.created_at) - new Date(a.created_at);
     }
   });
@@ -122,7 +123,10 @@ function venueCard(v) {
       <div class="venue-card-header">
         <div class="venue-card-top">
           <div class="venue-name">${esc(v.name)}</div>
-          <span class="status-badge status-${v.status}">${v.status}</span>
+          <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+            ${v.rank ? `<span class="rank-badge">#${v.rank}</span>` : ''}
+            <span class="status-badge status-${v.status}">${v.status}</span>
+          </div>
         </div>
         ${v.location ? `<div class="venue-location">${esc(v.location)}</div>` : ''}
       </div>
@@ -145,6 +149,13 @@ function venueCard(v) {
       </div>
       <div class="venue-card-footer">
         ${domainHtml || '<span></span>'}
+        <div class="rank-field" onclick="event.stopPropagation()" title="Contact priority — 1 = contact first">
+          <span class="rank-label">Priority</span>
+          <input type="number" class="rank-input" min="1" max="99"
+                 value="${v.rank || ''}" placeholder="—"
+                 onchange="updateRank('${v.id}', this.value)"
+                 onkeydown="if(event.key==='Enter')this.blur()">
+        </div>
         <div class="card-actions" onclick="event.stopPropagation()">
           <button class="btn-icon" onclick="openEdit('${v.id}')">Edit</button>
           <button class="btn-icon danger" onclick="confirmDelete('${v.id}', '${esc(v.name).replace(/'/g, "\\'")}')">Delete</button>
@@ -356,6 +367,20 @@ async function saveRooms(venueId) {
     price_max:  r.price_max || null,
     price_type: r.price_type || 'fixed',
   })));
+}
+
+async function updateRank(id, value) {
+  const rank = parseInt(value) || null;
+  const { error } = await client.from('venues').update({ rank }).eq('id', id);
+  if (!error) {
+    const v = venues.find(v => v.id === id);
+    if (v) v.rank = rank;
+    if (currentSort === 'rank_asc') renderVenues();
+    else {
+      // Just re-render the badge without a full reload
+      renderVenues();
+    }
+  }
 }
 
 async function confirmDelete(id, name) {

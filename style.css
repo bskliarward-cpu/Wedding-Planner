@@ -1520,6 +1520,50 @@ a.app-logo:hover { background: var(--bg); }
 .status-task-in_progress { background: #dbeafe;               color: #1e40af;                  }
 .status-task-done        { background: var(--shortlisted-bg); color: var(--shortlisted-text);  }
 
+/* ── VENUE RANK ── */
+
+.rank-badge {
+  background: var(--accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 10px;
+  letter-spacing: 0.3px;
+}
+
+.rank-field {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.rank-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--text-muted);
+}
+
+.rank-input {
+  width: 44px;
+  padding: 3px 6px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  text-align: center;
+  color: var(--accent);
+  background: var(--surface);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.rank-input:focus { border-color: var(--accent); }
+.rank-input::-webkit-inner-spin-button,
+.rank-input::-webkit-outer-spin-button { opacity: 0; }
+
 /* ── VENUE PRICE TYPE TOGGLE ── */
 
 .price-type-tabs {
