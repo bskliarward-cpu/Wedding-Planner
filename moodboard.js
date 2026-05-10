@@ -1,19 +1,22 @@
 const { createClient } = supabase;
 const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let items         = [];
-let activeType    = 'image';
-let selectedColor = '#fef9ec';
-let fetchedImgUrl = '';
-let currentView   = localStorage.getItem('moodView') || 'masonry';
+let items            = [];
+let activeType       = 'image';
+let selectedColor    = '#fef9ec';
+let fetchedImgUrl    = '';
+let currentView      = localStorage.getItem('moodView') || 'masonry';
+let editingId        = null;
+let activeTag        = 'all';
+let currentUserEmail = '';
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 
 async function init() {
   const { data: { session } } = await client.auth.getSession();
   if (!session) { window.location.href = 'index.html'; return; }
+  currentUserEmail = session.user.email;
   document.getElementById('user-email').textContent = session.user.email;
-  // Restore active view button
   document.querySelectorAll('.view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === currentView));
   await loadItems();
   bindEvents();
@@ -27,28 +30,48 @@ async function loadItems() {
     .select('*')
     .order('created_at', { ascending: false });
   if (error) { console.error(error); return; }
-  items = data || [];
+  // Pinned items sort to top, then by created_at desc
+  items = (data || []).sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+  renderTagFilter();
   renderItems();
 }
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
 
+function renderTagFilter() {
+  const bar = document.getElementById('mood-filter-bar');
+  const allTags = new Set();
+  items.forEach(i => (i.tags || []).forEach(t => t && allTags.add(t)));
+
+  if (allTags.size === 0) { bar.innerHTML = ''; return; }
+
+  bar.innerHTML = ['all', ...allTags].map(tag => `
+    <button class="mood-filter-chip ${tag === activeTag ? 'active' : ''}"
+            onclick="setTagFilter('${esc(tag)}')">${tag === 'all' ? 'All' : esc(tag)}</button>
+  `).join('');
+}
+
 function renderItems() {
   const grid = document.getElementById('mood-grid');
   grid.className = `mood-grid mood-grid-${currentView}`;
 
-  if (items.length === 0) {
+  const filtered = activeTag === 'all'
+    ? items
+    : items.filter(i => (i.tags || []).includes(activeTag));
+
+  if (filtered.length === 0) {
     grid.innerHTML = `
       <div class="empty-state">
-        <h3>Nothing here yet</h3>
-        <p>Add images, notes, and websites for inspiration.</p>
+        <h3>${activeTag === 'all' ? 'Nothing here yet' : 'No items tagged \u201c' + esc(activeTag) + '\u201d'}</h3>
+        <p>${activeTag === 'all' ? 'Add images, notes, websites, and colours for inspiration.' : 'Try a different tag or add more items.'}</p>
       </div>`;
     return;
   }
-  grid.innerHTML = items.map(renderCard).join('');
+  grid.innerHTML = filtered.map(renderCard).join('');
 }
 
-// Seeded pseudo-random from item ID — stable across renders
+// ── CARD HELPERS ──────────────────────────────────────────────────────────────
+
 function seededRand(id, seed) {
   let h = seed * 2654435761;
   for (const c of id) h = Math.imul(h ^ c.charCodeAt(0), 2654435761);
@@ -58,16 +81,63 @@ function seededRand(id, seed) {
 function cardMods(id) {
   const r0 = seededRand(id, 0);
   const r1 = seededRand(id, 1);
-  const isWide  = currentView === 'mosaic'  && r1 > 0.42;
-  const rot     = currentView === 'scatter' ? (r0 - 0.5) * 14 : 0; // -7° to +7°
+  const isWide = currentView === 'mosaic' && r1 > 0.42;
+  const rot    = currentView === 'scatter' ? (r0 - 0.5) * 14 : 0;
   return {
     cls:   isWide ? ' card-wide' : '',
     style: rot ? ` style="transform:rotate(${rot.toFixed(2)}deg)"` : '',
+    rot,
   };
 }
 
+function overlayHTML(item) {
+  const pinned = item.pinned || false;
+  return `
+    <div class="mood-card-overlay">
+      <button class="mood-action-btn ${pinned ? 'pinned' : ''}"
+              onclick="togglePin('${item.id}',event)" title="${pinned ? 'Unpin' : 'Pin to top'}">&#128204;</button>
+      <button class="mood-action-btn"
+              onclick="editItem('${item.id}',event)" title="Edit">&#9998;</button>
+      <button class="mood-action-btn mood-action-del"
+              onclick="deleteItem('${item.id}',event)" title="Remove">&times;</button>
+    </div>
+    ${pinned ? '<div class="mood-pin-indicator">&#128204;</div>' : ''}`;
+}
+
+function tagsHTML(item) {
+  const tags = (item.tags || []).filter(Boolean);
+  if (!tags.length) return '';
+  return `<div class="mood-card-tags">${tags.map(t => `<span class="mood-tag">${esc(t)}</span>`).join('')}</div>`;
+}
+
+function nameFromEmail(email) {
+  if (!email) return '?';
+  const local = email.split('@')[0];
+  return local.charAt(0).toUpperCase() + (local.charAt(1) || '').toUpperCase();
+}
+
+function reactionsHTML(item) {
+  const reactions = item.reactions || {};
+  const myReacted = !!reactions[currentUserEmail];
+  const reactors  = Object.keys(reactions).filter(e => reactions[e]);
+
+  const chips = reactors.map(e => `
+    <span class="reactor-chip ${e === currentUserEmail ? 'me' : ''}">${esc(nameFromEmail(e))}</span>
+  `).join('');
+
+  return `
+    <div class="mood-reaction-bar" onclick="event.stopPropagation()">
+      <button class="reaction-heart ${myReacted ? 'reacted' : ''}"
+              onclick="toggleReaction('${item.id}',event)"
+              title="${myReacted ? 'Unlike' : 'Like'}">&#9829;</button>
+      ${chips}
+    </div>`;
+}
+
+// ── RENDER CARDS ──────────────────────────────────────────────────────────────
+
 function renderCard(item) {
-  const { cls, style } = cardMods(item.id);
+  const { cls, style, rot } = cardMods(item.id);
 
   if (item.type === 'image') {
     return `
@@ -75,46 +145,110 @@ function renderCard(item) {
         <img src="${esc(item.image_url)}" alt="${esc(item.title || '')}" loading="lazy"
           onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
         <div class="mood-img-error">Could not load image</div>
+        ${overlayHTML(item)}
+        ${tagsHTML(item)}
         ${item.title ? `<div class="mood-card-caption">${esc(item.title)}</div>` : ''}
-        <button class="mood-delete" onclick="deleteItem('${item.id}',event)" title="Remove">&times;</button>
+        ${reactionsHTML(item)}
       </div>`;
   }
+
   if (item.type === 'note') {
+    const bg = item.color || '#fef9ec';
+    const rotStyle = currentView === 'scatter'
+      ? `;transform:rotate(${((seededRand(item.id, 0) - 0.5) * 14).toFixed(2)}deg)` : '';
     return `
-      <div class="mood-card mood-card-note${cls}"${style} style="background:${esc(item.color || '#fef9ec')}${rot_inline(item.id)}" data-id="${item.id}">
+      <div class="mood-card mood-card-note${cls}" style="background:${esc(bg)}${rotStyle}" data-id="${item.id}">
+        ${overlayHTML(item)}
         <div class="mood-note-text">${esc(item.content).replace(/\n/g, '<br>')}</div>
-        <button class="mood-delete" onclick="deleteItem('${item.id}',event)" title="Remove">&times;</button>
+        ${tagsHTML(item)}
+        ${reactionsHTML(item)}
       </div>`;
   }
+
   if (item.type === 'link') {
     let domain = item.content;
     try { domain = new URL(item.content).hostname.replace(/^www\./, ''); } catch {}
     return `
-      <div class="mood-card mood-card-link${cls}"${style} data-id="${item.id}" onclick="window.open('${esc(item.content)}','_blank')">
+      <div class="mood-card mood-card-link${cls}"${style} data-id="${item.id}"
+           onclick="window.open('${esc(item.content)}','_blank')">
         ${item.image_url ? `<img src="${esc(item.image_url)}" alt="${esc(item.title || '')}" loading="lazy" onerror="this.style.display='none'">` : ''}
         <div class="mood-link-body">
           ${item.title ? `<div class="mood-link-title">${esc(item.title)}</div>` : ''}
           <div class="mood-link-domain">${esc(domain)}</div>
         </div>
-        <button class="mood-delete" onclick="deleteItem('${item.id}',event)" title="Remove">&times;</button>
+        ${overlayHTML(item)}
+        ${tagsHTML(item)}
+        ${reactionsHTML(item)}
       </div>`;
   }
+
+  if (item.type === 'color') {
+    return `
+      <div class="mood-card mood-card-color${cls}"${style} data-id="${item.id}">
+        <div class="mood-color-swatch" style="background:${esc(item.color || '#cccccc')}"></div>
+        <div class="mood-color-info">
+          <div class="mood-color-hex">${esc(item.color || '')}</div>
+          ${item.title ? `<div class="mood-color-label-text">${esc(item.title)}</div>` : ''}
+        </div>
+        ${overlayHTML(item)}
+        ${tagsHTML(item)}
+        ${reactionsHTML(item)}
+      </div>`;
+  }
+
   return '';
 }
 
-// Note cards need the rotation merged into their existing inline style
-function rot_inline(id) {
-  if (currentView !== 'scatter') return '';
-  const rot = (seededRand(id, 0) - 0.5) * 14;
-  return `;transform:rotate(${rot.toFixed(2)}deg)`;
-}
-
-// ── VIEW ──────────────────────────────────────────────────────────────────────
+// ── VIEW / TAG FILTER ─────────────────────────────────────────────────────────
 
 function setView(view) {
   currentView = view;
   localStorage.setItem('moodView', view);
   document.querySelectorAll('.view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  renderItems();
+}
+
+function setTagFilter(tag) {
+  activeTag = tag;
+  renderTagFilter();
+  renderItems();
+}
+
+// ── EDIT ──────────────────────────────────────────────────────────────────────
+
+function editItem(id, e) {
+  e.stopPropagation();
+  const item = items.find(i => i.id === id);
+  if (item) openModal(item);
+}
+
+// ── PIN ───────────────────────────────────────────────────────────────────────
+
+async function togglePin(id, e) {
+  e.stopPropagation();
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  const { error } = await client.from('mood_items').update({ pinned: !item.pinned }).eq('id', id);
+  if (error) { toast('Could not update.'); return; }
+  toast(item.pinned ? 'Unpinned.' : 'Pinned to top.');
+  loadItems();
+}
+
+// ── REACTIONS ─────────────────────────────────────────────────────────────────
+
+async function toggleReaction(id, e) {
+  e.stopPropagation();
+  const item = items.find(i => i.id === id);
+  if (!item) return;
+  const reactions = { ...(item.reactions || {}) };
+  if (reactions[currentUserEmail]) {
+    delete reactions[currentUserEmail];
+  } else {
+    reactions[currentUserEmail] = true;
+  }
+  const { error } = await client.from('mood_items').update({ reactions }).eq('id', id);
+  if (error) { toast('Could not update.'); return; }
+  item.reactions = reactions; // optimistic local update
   renderItems();
 }
 
@@ -125,39 +259,54 @@ async function saveItem() {
   btn.disabled = true;
   btn.textContent = 'Saving…';
 
-  let payload = { type: activeType };
+  const tagsRaw = document.getElementById('f-tags').value.trim();
+  const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+  let payload = { type: activeType, tags };
 
   if (activeType === 'image') {
     const url = document.getElementById('f-image-url').value.trim();
-    if (!url) { toast('Please enter an image URL.'); reset(btn); return; }
+    if (!url) { toast('Please enter an image URL.'); resetBtn(btn); return; }
     payload.image_url = url;
     payload.title = document.getElementById('f-image-caption').value.trim() || null;
 
   } else if (activeType === 'note') {
     const text = document.getElementById('f-note-text').value.trim();
-    if (!text) { toast('Please write something.'); reset(btn); return; }
+    if (!text) { toast('Please write something.'); resetBtn(btn); return; }
     payload.content = text;
     payload.color   = selectedColor;
 
   } else if (activeType === 'link') {
     const url = document.getElementById('f-link-url').value.trim();
-    if (!url) { toast('Please enter a URL.'); reset(btn); return; }
+    if (!url) { toast('Please enter a URL.'); resetBtn(btn); return; }
     payload.content   = url;
     payload.title     = document.getElementById('f-link-title').value.trim() || null;
     payload.image_url = fetchedImgUrl || null;
+
+  } else if (activeType === 'color') {
+    const hex = document.getElementById('f-color-hex-text').value.trim();
+    if (!hex) { toast('Please pick a colour.'); resetBtn(btn); return; }
+    payload.color = hex;
+    payload.title = document.getElementById('f-color-label').value.trim() || null;
   }
 
-  const { error } = await client.from('mood_items').insert([payload]);
-  reset(btn);
+  let error;
+  if (editingId) {
+    ({ error } = await client.from('mood_items').update(payload).eq('id', editingId));
+  } else {
+    ({ error } = await client.from('mood_items').insert([payload]));
+  }
+
+  resetBtn(btn);
   if (error) { toast('Could not save — ' + error.message); return; }
   closeModal();
-  toast('Added to mood board.');
+  toast(editingId ? 'Updated.' : 'Added to mood board.');
   loadItems();
 }
 
-function reset(btn) {
+function resetBtn(btn) {
   btn.disabled = false;
-  btn.textContent = 'Add to board';
+  btn.textContent = editingId ? 'Save changes' : 'Add to board';
 }
 
 async function deleteItem(id, e) {
@@ -206,41 +355,99 @@ async function fetchLink() {
     document.getElementById('link-preview').src = image;
     document.getElementById('link-preview-wrap').classList.remove('hidden');
   }
-
   toast('Details fetched.');
 }
 
 // ── MODAL ─────────────────────────────────────────────────────────────────────
 
-function openModal() {
-  activeType    = 'image';
+function openModal(item = null) {
+  editingId     = item ? item.id : null;
   fetchedImgUrl = '';
   selectedColor = '#fef9ec';
 
-  ['f-image-url','f-image-caption','f-note-text','f-link-url','f-link-title'].forEach(id => {
+  // Clear all inputs
+  ['f-image-url','f-image-caption','f-note-text','f-link-url','f-link-title','f-color-label','f-tags'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
+  document.getElementById('f-color-hex-text').value = '#b8965a';
+  document.getElementById('f-color-hex').value      = '#b8965a';
   document.getElementById('image-preview-wrap').classList.add('hidden');
   document.getElementById('link-preview-wrap').classList.add('hidden');
 
-  document.querySelectorAll('.mood-type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === 'image'));
-  document.querySelectorAll('.mood-fields').forEach(f => f.classList.add('hidden'));
-  document.getElementById('fields-image').classList.remove('hidden');
-  document.querySelectorAll('.note-color-btn').forEach(b => b.classList.toggle('active', b.dataset.color === selectedColor));
+  const tabs      = document.getElementById('mood-type-tabs');
+  const titleEl   = document.getElementById('modal-title');
+  const saveBtn   = document.getElementById('btn-save');
+
+  if (item) {
+    // Edit mode — hide type tabs, pre-fill fields
+    titleEl.textContent  = 'Edit item';
+    saveBtn.textContent  = 'Save changes';
+    tabs.classList.add('hidden');
+    activeType = item.type;
+
+    document.getElementById('f-tags').value = (item.tags || []).join(', ');
+
+    if (item.type === 'image') {
+      document.getElementById('f-image-url').value     = item.image_url || '';
+      document.getElementById('f-image-caption').value = item.title     || '';
+      if (item.image_url) {
+        document.getElementById('image-preview').src = item.image_url;
+        document.getElementById('image-preview-wrap').classList.remove('hidden');
+      }
+    } else if (item.type === 'note') {
+      document.getElementById('f-note-text').value = item.content || '';
+      selectedColor = item.color || '#fef9ec';
+      document.querySelectorAll('.note-color-btn').forEach(b =>
+        b.classList.toggle('active', b.dataset.color === selectedColor));
+    } else if (item.type === 'link') {
+      document.getElementById('f-link-url').value   = item.content || '';
+      document.getElementById('f-link-title').value = item.title   || '';
+      fetchedImgUrl = item.image_url || '';
+      if (item.image_url) {
+        document.getElementById('link-preview').src = item.image_url;
+        document.getElementById('link-preview-wrap').classList.remove('hidden');
+      }
+    } else if (item.type === 'color') {
+      const hex = item.color || '#b8965a';
+      document.getElementById('f-color-hex-text').value = hex;
+      document.getElementById('f-color-hex').value      = hex;
+      document.getElementById('f-color-label').value    = item.title || '';
+    }
+
+    document.querySelectorAll('.mood-fields').forEach(f => f.classList.add('hidden'));
+    document.getElementById(`fields-${activeType}`).classList.remove('hidden');
+
+  } else {
+    // Add mode
+    titleEl.textContent = 'Add to Mood Board';
+    saveBtn.textContent = 'Add to board';
+    tabs.classList.remove('hidden');
+    activeType = 'image';
+
+    document.querySelectorAll('.mood-type-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.type === 'image'));
+    document.querySelectorAll('.mood-fields').forEach(f => f.classList.add('hidden'));
+    document.getElementById('fields-image').classList.remove('hidden');
+    document.querySelectorAll('.note-color-btn').forEach(b =>
+      b.classList.toggle('active', b.dataset.color === selectedColor));
+  }
 
   document.getElementById('modal-overlay').classList.remove('hidden');
-  document.getElementById('f-image-url').focus();
+  setTimeout(() => {
+    document.getElementById(`fields-${activeType}`)?.querySelector('input,textarea')?.focus();
+  }, 50);
 }
 
 function closeModal() {
   document.getElementById('modal-overlay').classList.add('hidden');
+  editingId = null;
 }
 
 // ── EVENTS ────────────────────────────────────────────────────────────────────
 
 function bindEvents() {
-  document.getElementById('btn-add').addEventListener('click', openModal);
+  document.getElementById('btn-add').addEventListener('click', () => openModal());
   document.getElementById('btn-save').addEventListener('click', saveItem);
   document.getElementById('btn-modal-close').addEventListener('click', closeModal);
   document.getElementById('btn-cancel').addEventListener('click', closeModal);
@@ -278,6 +485,17 @@ function bindEvents() {
       document.getElementById('image-preview-wrap').classList.remove('hidden');
     } else {
       document.getElementById('image-preview-wrap').classList.add('hidden');
+    }
+  });
+
+  // Colour picker ↔ hex text sync
+  document.getElementById('f-color-hex').addEventListener('input', e => {
+    document.getElementById('f-color-hex-text').value = e.target.value;
+  });
+  document.getElementById('f-color-hex-text').addEventListener('input', e => {
+    const val = e.target.value.trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+      document.getElementById('f-color-hex').value = val;
     }
   });
 

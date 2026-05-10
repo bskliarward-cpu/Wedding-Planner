@@ -44,24 +44,27 @@
       </div>
     </div>
 
+    <div class="mood-filter-bar" id="mood-filter-bar"></div>
+
     <div class="mood-grid" id="mood-grid">
       <div class="empty-state"><h3>Loading…</h3></div>
     </div>
   </main>
 
-  <!-- Add Modal -->
+  <!-- Add / Edit Modal -->
   <div class="modal-overlay hidden" id="modal-overlay">
     <div class="modal mood-modal">
       <div class="modal-header">
-        <h3>Add to Mood Board</h3>
+        <h3 id="modal-title">Add to Mood Board</h3>
         <button class="btn-close" id="btn-modal-close">&times;</button>
       </div>
       <div class="modal-body">
 
-        <div class="mood-type-tabs">
+        <div class="mood-type-tabs" id="mood-type-tabs">
           <button class="mood-type-btn active" data-type="image">Image</button>
           <button class="mood-type-btn" data-type="note">Note</button>
           <button class="mood-type-btn" data-type="link">Website</button>
+          <button class="mood-type-btn" data-type="color">Colour</button>
         </div>
 
         <!-- Image fields -->
@@ -114,6 +117,27 @@
           <div class="mood-img-preview hidden" id="link-preview-wrap">
             <img id="link-preview" src="" alt="preview">
           </div>
+        </div>
+
+        <!-- Colour swatch fields -->
+        <div class="mood-fields hidden" id="fields-color">
+          <div class="field">
+            <label for="f-color-hex-text">Colour</label>
+            <div class="color-picker-row">
+              <input type="color" id="f-color-hex" value="#b8965a">
+              <input type="text" id="f-color-hex-text" placeholder="#b8965a" maxlength="7" value="#b8965a">
+            </div>
+          </div>
+          <div class="field">
+            <label for="f-color-label">Label (optional)</label>
+            <input type="text" id="f-color-label" placeholder="e.g. Champagne Gold">
+          </div>
+        </div>
+
+        <!-- Shared tags field (shown for all types) -->
+        <div class="field mood-tags-field">
+          <label for="f-tags">Tags <span class="label-hint">comma-separated</span></label>
+          <input type="text" id="f-tags" placeholder="florals, venue decor, cake…">
         </div>
 
       </div>

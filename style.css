@@ -1778,3 +1778,196 @@ a.app-logo:hover { background: var(--bg); }
   .guest-search { width: 100%; }
   .guest-search:focus { width: 100%; }
 }
+
+/* ── MOOD BOARD: CARD OVERLAY (edit / pin / delete) ── */
+
+.mood-card-overlay {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 3;
+}
+.mood-card:hover .mood-card-overlay { opacity: 1; }
+
+.mood-action-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.42);
+  color: #fff;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+  padding: 0;
+}
+.mood-action-btn:hover         { background: rgba(0,0,0,0.65); }
+.mood-action-btn.pinned        { background: rgba(184,150,90,0.9); }
+.mood-action-btn.pinned:hover  { background: rgba(184,150,90,1); }
+.mood-action-del:hover         { background: rgba(185,40,40,0.85) !important; }
+
+/* Pin indicator — always visible on pinned cards (top-left) */
+.mood-pin-indicator {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 13px;
+  line-height: 1;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.4));
+  z-index: 2;
+}
+
+/* ── MOOD BOARD: REACTIONS ── */
+
+.mood-reaction-bar {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-top: 1px solid rgba(0,0,0,0.06);
+}
+
+.reaction-heart {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  color: var(--text-muted);
+  padding: 1px 3px;
+  border-radius: 4px;
+  transition: color 0.15s, transform 0.1s;
+  line-height: 1;
+}
+.reaction-heart:hover  { color: #e05275; transform: scale(1.2); }
+.reaction-heart.reacted { color: #e05275; }
+
+.reactor-chip {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1px 6px;
+}
+.reactor-chip.me {
+  color: #9f1239;
+  background: #ffe4e6;
+  border-color: #fda4af;
+}
+
+/* ── MOOD BOARD: TAGS ON CARDS ── */
+
+.mood-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px 10px 2px;
+}
+
+.mood-tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-light);
+  border-radius: 8px;
+  padding: 2px 7px;
+}
+
+/* ── MOOD BOARD: TAG FILTER BAR ── */
+
+.mood-filter-bar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.mood-filter-chip {
+  padding: 5px 14px;
+  border-radius: 16px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.mood-filter-chip:hover  { border-color: var(--accent); color: var(--accent); }
+.mood-filter-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ── MOOD BOARD: COLOUR SWATCH CARD ── */
+
+.mood-card-color { background: var(--surface); }
+
+.mood-color-swatch {
+  height: 100px;
+  width: 100%;
+  display: block;
+}
+
+.mood-color-info {
+  padding: 10px 14px 6px;
+  border-top: 1px solid var(--border);
+}
+
+.mood-color-hex {
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.mood-color-label-text {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ── MOOD BOARD: NOTE CARD bottom padding trim ── */
+.mood-card-note { padding-bottom: 8px; }
+
+/* ── MOOD BOARD MODAL: colour picker row ── */
+
+.color-picker-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.color-picker-row input[type="color"] {
+  width: 50px;
+  height: 42px;
+  padding: 3px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  cursor: pointer;
+  background: none;
+  flex-shrink: 0;
+}
+
+.color-picker-row input[type="text"] {
+  flex: 1;
+  font-family: 'Courier New', monospace;
+}
+
+/* ── MOOD BOARD MODAL: shared tags field ── */
+
+.mood-tags-field {
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+  margin-top: 4px;
+}
